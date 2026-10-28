@@ -1,0 +1,854 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Allergy Safe Dining Revision</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* Layout: a kitchen order ticket. Header strip with an amber "allergy flag", tab rail, then one ticket-shaped work area with a torn bottom edge. */
+:root{
+  --bg:#E6ECEE;
+  --card:#FCFDFD;
+  --soft:#EDF2F4;
+  --ink:#10202A;
+  --muted:#4F626C;
+  --line:#C6D1D6;
+  --accent:#0E5A70;
+  --accent-ink:#FFFFFF;
+  --flag:#EBA818;
+  --flag-ink:#2A1C00;
+  --ok:#17744A;
+  --ok-bg:#DCF1E5;
+  --bad:#A92F1D;
+  --bad-bg:#F8E2DD;
+  --f-display:"Barlow Condensed","Arial Narrow",Arial,sans-serif;
+  --f-body:"Atkinson Hyperlegible","Segoe UI",system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0E181E; --card:#16242C; --soft:#1D2F39; --ink:#E7EFF2; --muted:#9DB1BB; --line:#2E4551;
+    --accent:#62C3DA; --accent-ink:#06232C; --flag:#F0B63C; --flag-ink:#2A1C00;
+    --ok:#52C48C; --ok-bg:#16382A; --bad:#F27A66; --bad-bg:#40201B; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0E181E; --card:#16242C; --soft:#1D2F39; --ink:#E7EFF2; --muted:#9DB1BB; --line:#2E4551;
+  --accent:#62C3DA; --accent-ink:#06232C; --flag:#F0B63C; --flag-ink:#2A1C00;
+  --ok:#52C48C; --ok-bg:#16382A; --bad:#F27A66; --bad-bg:#40201B; color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{
+  background:var(--bg); color:var(--ink);
+  font:17px/1.5 var(--f-body);
+  padding-block:20px 48px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));
+  padding-right:max(16px,env(safe-area-inset-right,0px));
+}
+.shell{max-width:980px;margin:0 auto}
+h1,h2,h3{font-family:var(--f-display);font-weight:700;margin:0;line-height:1.05;text-wrap:balance}
+p{margin:0}
+button{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.mono{font-family:var(--f-mono);font-size:.76rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+
+/* masthead */
+.mast{display:grid;gap:12px;padding-bottom:18px}
+.mast-top{display:flex;flex-wrap:wrap;align-items:center;gap:12px}
+.stamp{background:var(--flag);color:var(--flag-ink);font-family:var(--f-mono);font-weight:500;font-size:.8rem;letter-spacing:.12em;padding:5px 10px;transform:rotate(-2deg);border-radius:2px}
+.mast h1{font-size:clamp(2.6rem,9vw,4.6rem);text-transform:uppercase;letter-spacing:.01em}
+.mast p.sub{max-width:62ch;color:var(--muted)}
+.toggle{display:inline-flex;align-items:center;gap:8px;font-size:.95rem;cursor:pointer;width:max-content;max-width:100%}
+.toggle input{width:20px;height:20px;accent-color:var(--accent)}
+
+/* tabs */
+.tabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}
+.tab{background:var(--card);border:1px solid var(--line);border-radius:4px;padding:9px 14px;cursor:pointer;font-family:var(--f-display);font-weight:600;font-size:1.2rem;letter-spacing:.03em;text-transform:uppercase}
+.tab[aria-selected="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+
+/* ticket */
+.ticket{position:relative;background:var(--card);border:1px solid var(--line);border-bottom:0;border-radius:6px 6px 0 0;padding:22px clamp(14px,3vw,30px) 26px;margin-bottom:28px;min-height:420px}
+.ticket::after{content:"";position:absolute;left:-1px;right:-1px;top:100%;height:10px;background:conic-gradient(from -45deg at 50% 100%,var(--card) 90deg,transparent 0) 0 0/20px 10px;}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.between{justify-content:space-between}
+.stack{display:grid;gap:16px}
+.chip{background:var(--soft);border:1px solid var(--line);border-radius:999px;padding:6px 14px;cursor:pointer;font-size:.95rem}
+.chip.on{background:var(--ink);color:var(--card);border-color:var(--ink)}
+.btn{background:var(--card);border:1.5px solid var(--ink);border-radius:4px;padding:10px 18px;cursor:pointer;font-weight:700}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.good{background:var(--ok);border-color:var(--ok);color:#fff}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.link{background:none;border:0;padding:4px 0;cursor:pointer;color:var(--accent);font-weight:700;text-decoration:underline;text-underline-offset:3px}
+.bar{height:6px;background:var(--soft);border-radius:3px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent)}
+
+/* flashcards */
+.fcard{display:grid;align-content:center;justify-items:center;gap:10px;width:100%;min-height:300px;padding:28px 20px;text-align:center;background:var(--soft);border:2px dashed var(--line);border-radius:6px;cursor:pointer}
+.fcard.back{background:var(--card);border-style:solid;border-color:var(--accent)}
+.fcard .term{font-family:var(--f-display);font-weight:700;font-size:clamp(2.4rem,9vw,3.8rem);line-height:1}
+.fcard .term.mid{font-size:clamp(1.9rem,6.5vw,2.8rem);line-height:1.1;text-wrap:balance}
+.fcard .def{font-size:1.25rem;max-width:34ch}
+.fcard .ex{color:var(--muted);font-style:italic;max-width:40ch}
+.fcard .it{background:var(--flag);color:var(--flag-ink);padding:4px 12px;border-radius:3px;font-weight:700}
+.fcard .it b{font-family:var(--f-mono);font-size:.75rem;letter-spacing:.1em;margin-right:6px}
+.fcard .hint{color:var(--muted);font-size:.95rem}
+.empty{padding:50px 10px;text-align:center;display:grid;gap:8px}
+.empty h3{font-size:2rem}
+
+/* quiz picker */
+.group{display:grid;gap:10px}
+.group h2{font-size:1.5rem;text-transform:uppercase;letter-spacing:.04em}
+.sets{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
+.set{display:grid;gap:4px;text-align:left;background:var(--card);border:1.5px solid var(--ink);border-radius:4px;padding:14px;cursor:pointer;min-width:0}
+.set strong{font-family:var(--f-display);font-size:1.45rem;line-height:1.1}
+.set span{color:var(--muted);font-size:.95rem}
+.set .mono{margin-top:4px}
+
+/* question */
+.eyebrow{font-family:var(--f-mono);font-size:.78rem;letter-spacing:.1em;text-transform:uppercase;color:var(--accent)}
+.prompt{font-family:var(--f-display);font-weight:600;font-size:clamp(1.7rem,5.2vw,2.35rem);line-height:1.15;text-wrap:balance}
+.prompt.long{font-family:var(--f-body);font-weight:700;font-size:clamp(1.2rem,3.6vw,1.5rem);line-height:1.35}
+.blank{display:inline-block;min-width:5.5ch;border-bottom:3px dashed var(--accent);text-align:center;padding:0 6px;color:var(--accent);font-family:var(--f-mono);font-size:.82em;font-weight:500;line-height:1.1}
+.opts{display:grid;gap:10px}
+.opts.cols{grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr))}
+.opt{display:grid;grid-template-columns:auto minmax(0,1fr);gap:12px;align-items:start;text-align:left;background:var(--card);border:1.5px solid var(--line);border-radius:4px;padding:12px 14px;cursor:pointer;min-width:0}
+.opt.nol{grid-template-columns:minmax(0,1fr)}
+.opt .ltr{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--soft);font-family:var(--f-mono);font-size:.8rem;font-weight:500}
+.opt.picked-none:hover{border-color:var(--accent)}
+.opt.correct{background:var(--ok-bg);border-color:var(--ok)}
+.opt.wrong{background:var(--bad-bg);border-color:var(--bad)}
+.opt.dim{opacity:.55}
+.opt[aria-disabled="true"]{cursor:default}
+.fb{padding:12px 14px;border-radius:4px;border-left:6px solid var(--ok);background:var(--ok-bg)}
+.fb.no{border-left-color:var(--bad);background:var(--bad-bg)}
+.fb b{display:block;font-family:var(--f-display);font-size:1.3rem;letter-spacing:.03em;text-transform:uppercase}
+.res{display:grid;gap:16px}
+.score{font-family:var(--f-display);font-weight:700;font-size:clamp(3.5rem,14vw,6rem);line-height:.95}
+.miss{display:grid;gap:10px}
+.miss article{border:1px solid var(--line);border-radius:4px;padding:12px 14px;display:grid;gap:4px;background:var(--soft)}
+.miss .ans{color:var(--ok);font-weight:700}
+
+/* match */
+.mgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px 14px}
+.mcol{display:grid;gap:10px;align-content:start;min-width:0}
+.mitem{background:var(--card);border:1.5px solid var(--line);border-radius:4px;padding:10px 12px;cursor:pointer;text-align:left;min-width:0;overflow-wrap:anywhere}
+.mitem.term{font-family:var(--f-display);font-weight:600;font-size:1.3rem}
+.mitem.sel{border-color:var(--accent);background:var(--soft);box-shadow:inset 0 0 0 1.5px var(--accent)}
+.mitem.done{background:var(--ok-bg);border-color:var(--ok);cursor:default}
+.mitem.bad{background:var(--bad-bg);border-color:var(--bad)}
+@media (max-width:480px){.mitem{font-size:.9rem;padding:9px}.mitem.term{font-size:1.15rem}.mgrid{gap:8px}}
+
+/* allergens */
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.food{background:var(--card);border:1.5px solid var(--line);border-radius:4px;padding:9px 14px;cursor:pointer}
+.food.sel{background:var(--ink);color:var(--card);border-color:var(--ink)}
+.food.ok{background:var(--ok-bg);border-color:var(--ok);color:var(--ink)}
+.food.bad{background:var(--bad-bg);border-color:var(--bad);color:var(--ink)}
+.food.miss{border:2px dashed var(--flag);background:var(--card);color:var(--ink)}
+.food[aria-disabled="true"]{cursor:default}
+.list14{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px;padding:0;margin:0;list-style:none}
+.list14 li{background:var(--soft);border-radius:4px;padding:8px 12px;min-width:0}
+.list14 small{display:block;color:var(--muted)}
+
+/* order */
+.slots,.pool{display:grid;gap:8px;padding:0;margin:0;list-style:none}
+.slot{display:grid;grid-template-columns:auto minmax(0,1fr);gap:12px;align-items:center;min-height:56px;border:1.5px dashed var(--line);border-radius:4px;padding:8px 12px;background:var(--card);text-align:left;width:100%;cursor:default}
+.slot .n{font-family:var(--f-display);font-weight:700;font-size:1.8rem;width:30px;text-align:center;color:var(--accent)}
+.slot.filled{border-style:solid;border-color:var(--ink);cursor:pointer}
+.slot.ok{background:var(--ok-bg);border-color:var(--ok)}
+.slot.no{background:var(--bad-bg);border-color:var(--bad)}
+.slot .ph{color:var(--muted)}
+.step{width:100%;text-align:left;background:var(--soft);border:1.5px solid var(--line);border-radius:4px;padding:11px 14px;cursor:pointer}
+.step:hover{border-color:var(--accent)}
+
+/* word-bank worksheet */
+.bank{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px;padding:12px;background:var(--soft);border:1.5px dashed var(--line);border-radius:6px}
+.bw{background:var(--card);border:1.5px solid var(--ink);border-radius:999px;padding:3px 12px;font-family:var(--f-mono);font-size:.88rem}
+.bw.used{opacity:.4;text-decoration:line-through}
+.sheet{display:grid;gap:16px;margin:0;padding-left:1.7em}
+.sheet li{padding-left:.3em;min-width:0}
+.sline{line-height:2.3;overflow-wrap:anywhere}
+select.gs{font-family:var(--f-mono);font-size:.85rem;background:var(--card);color:var(--ink);border:1.5px solid var(--accent);border-radius:4px;padding:4px 6px;max-width:100%;margin:0 2px}
+select.gs.ok{background:var(--ok-bg);border-color:var(--ok)}
+select.gs.no{background:var(--bad-bg);border-color:var(--bad)}
+.st{font-family:var(--f-mono);font-size:.74rem;letter-spacing:.06em;text-transform:uppercase}
+.st.ok{color:var(--ok)}
+.st.no{color:var(--bad)}
+.xp{color:var(--muted);font-size:.95rem}
+footer{color:var(--muted);font-size:.9rem;display:grid;gap:4px}
+
+@media (prefers-reduced-motion:no-preference){
+  .opt,.mitem,.food,.btn,.tab,.chip{transition:background-color .15s,border-color .15s}
+  .bar i{transition:width .3s}
+}
+@media (max-width:520px){
+  .tab{font-size:1.05rem;padding:8px 10px}
+  .btn{padding:10px 14px}
+}
+</style>
+
+<div class="shell">
+  <header class="mast">
+    <div class="mast-top"><span class="stamp">ALLERGY ORDER</span><span class="mono">Revision desk · 5th year</span></div>
+    <h1>Allergy-safe dining</h1>
+    <p class="sub">Practise the key words and ideas from your textbook pages on food allergies, intolerances and coeliac disease, and from the slides on safe dining for guests.</p>
+  </header>
+
+  <nav class="tabs" role="tablist" aria-label="Revision activities" id="tabs"></nav>
+  <main class="ticket" id="stage" role="tabpanel" aria-live="polite"></main>
+
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/*DATA*/
+const CARDS=[
+["allergy","health","A fast reaction of the immune system to a food protein.","allergia","She has an allergy to peanuts."],
+["intolerance","health","A slow reaction because the body cannot digest a food well.","intolleranza","He has an intolerance to dairy products."],
+["immune system","health","The body’s defence against germs and harmful substances.","sistema immunitario","In an allergy, the immune system reacts to a food protein."],
+["anaphylactic shock","health","A very serious allergic reaction that can be life-threatening.","shock anafilattico","Anaphylactic shock can be fatal."],
+["symptom","health","A sign that shows you are ill.","sintomo","Indigestion is a common symptom of food intolerance."],
+["rash","health","Red, itchy spots on the skin.","eruzione cutanea","A skin rash can be a sign of an allergy."],
+["throat swelling","health","The throat becomes bigger, so it is hard to swallow or breathe.","gonfiore alla gola","Throat swelling is a serious symptom."],
+["hindered breathing","health","Breathing that is made difficult.","respirazione difficoltosa","Hindered breathing needs urgent help."],
+["indigestion","health","Pain or discomfort in the stomach after eating.","difficoltà di digestione","Too much coffee gave him indigestion."],
+["abdominal pain","health","Pain in the stomach area.","dolore addominale","Abdominal pain is common with intolerances."],
+["inflammation","health","Painful swelling and redness in a part of the body.","infiammazione","Coeliac disease causes inflammation of the digestive system."],
+["coeliac disease","health","An intolerance to gluten that affects the digestive system.","celiachia","The only treatment for coeliac disease is a gluten-free diet."],
+["life-threatening","health","Dangerous enough to cause death.","pericoloso per la vita","Some allergic reactions are life-threatening."],
+["cure","health","A treatment that ends an illness completely.","cura, guarigione","There is no cure for food allergies."],
+["trace","health","A very small amount.","traccia","A trace of nuts can cause a reaction."],
+["rising","health","Going up in number.","in aumento","The number of allergy cases is rising."],
+["gluten","food","An elastic protein found in wheat flour.","glutine","Bread, pasta and pastries contain gluten."],
+["wheat","food","A cereal used to make flour, bread and pasta.","frumento, grano","The Western diet is based on wheat."],
+["flour","food","A powder made by grinding grain.","farina","Wheat flour contains gluten."],
+["dough","food","A soft mixture of flour and water used to make bread.","impasto","Gluten binds the dough."],
+["cornmeal","food","Flour made from maize.","farina di mais","The Mexican diet is based on cornmeal."],
+["cold meats","food","Cooked or cured meats served cold, such as ham.","salumi, affettati","Some cold meats contain gluten."],
+["pastries","food","Sweet baked foods such as croissants.","dolci da forno, pasticcini","Pastries are made with wheat flour."],
+["dairy products","food","Foods made from milk, such as cheese and butter.","latticini","Many people cannot digest dairy products well."],
+["tree nuts","food","Nuts that grow on trees, such as almonds and walnuts.","frutta a guscio","Tree nuts are one of the 14 allergens."],
+["crustaceans","food","Sea animals with a hard shell, such as prawns and crabs.","crostacei","Crustaceans must be flagged on the menu."],
+["mollusks","food","Soft sea animals such as mussels and squid.","molluschi","Mollusks are one of the 14 allergens."],
+["sulphites","food","Chemicals used to preserve wine and some foods.","solfiti","Wine bottles must say “contains sulphites”."],
+["additives","food","Chemicals added to food to preserve it or change its taste or colour.","additivi","Some people are sensitive to chemical additives."],
+["lupin","food","A plant whose seeds are used in some flours.","lupino","Lupin is an allergen that guests often do not know."],
+["caterer","rest","A person or company that provides food for events.","chi offre servizio di catering","Caterers must be able to offer special diets."],
+["allergen","rest","A substance that can cause an allergic reaction.","allergene","Restaurants must flag allergens on the menu."],
+["traceability","rest","Being able to follow an ingredient from its source to the plate.","tracciabilità","Traceability helps a kitchen know every ingredient."],
+["declare","rest","To say something clearly and officially.","dichiarare","Restaurants must declare allergens."],
+["transparent","rest","Open and clear, with nothing hidden.","trasparente","Be transparent about ingredients."],
+["front of house","rest","The staff who work in the dining room, such as waiters.","personale di sala","Front of house staff talk to guests every day."],
+["POS","rest","Point of sale: a device used to take orders and payments.","terminale per ordini e pagamenti","The waiter enters the order on the mobile POS."],
+["flag","rest","To mark something so that people notice it.","segnalare","The waiter flags an allergy order."],
+["ticket","rest","A printed order that goes to the kitchen.","comanda","The chef reads the allergy flag on the ticket."],
+["cross-contact","rest","When an allergen passes by accident into another food.","contaminazione crociata","Shared fryers can cause cross-contact."],
+["fryer","rest","A machine that cooks food in hot oil.","friggitrice","Do not use a shared fryer for allergen-free food."],
+["utensils","rest","Tools for cooking and serving, such as knives and spoons.","utensili","Use separate utensils for different foods."],
+["ventilation","rest","The system that brings fresh air into a room.","ventilazione","Poor ventilation can spread food particles."],
+["apron","rest","Clothing worn over your uniform to keep it clean.","grembiule","A dirty apron can carry allergens."],
+["sanitation","rest","Keeping a place clean to protect health.","igiene","Poor sanitation increases the risk."],
+["labelled","rest","With a label that gives information.","etichettato","Food must be clearly labelled."],
+["in sync","rest","Matching and up to date everywhere.","allineato, aggiornato","One system keeps every menu in sync."]
+].map(([t,k,d,it,x])=>({t,k,d,it,x}));
+const TOPIC={health:"Body & health",food:"Food & allergens",rest:"Restaurant"};
+
+const POINTS=[
+"1 · Be transparent about ingredients",
+"2 · Show allergens on the menu",
+"3 · Give staff the right information",
+"4 · Train staff on allergen safety",
+"5 · Avoid kitchen contamination",
+"6 · Flag requests to the chef"
+];
+
+const QUIZZES=[
+{id:"gap",group:"Words",name:"Fill the gap 1",sub:"Use the word bank and the drop-down menus.",sheet:true,q:[
+{p:"Food ___ is a fast reaction of the immune system to a food protein.",a:"allergy",w:["intolerance","infection","poisoning"],e:"An allergy involves the immune system and is fast."},
+{p:"Food ___ is a slow reaction because the body lacks the chemicals needed to digest a food.",a:"intolerance",w:["allergy","addiction","inflammation"],e:"An intolerance is a digestion problem, not an immune reaction."},
+{p:"Gluten is an elastic ___ found in wheat flour.",a:"protein",w:["fat","sugar","mineral"],e:"Gluten is a protein."},
+{p:"Gluten ___ the dough, so bread keeps its shape.",a:"binds",w:["finds","breaks","melts"],e:"Binds means holds together."},
+{p:"Coeliac disease causes an inflammation of the ___ system.",a:"digestive",w:["immune","nervous","respiratory"],e:"It is an intolerance, so it affects digestion."},
+{p:"Eating even the smallest ___ of a food can cause a reaction.",a:"trace",w:["track","sign","spot"],e:"A trace is a very small amount."},
+{p:"Cases of anaphylaxis are ___: there are more every year.",a:"rising",w:["falling","stable","rare"],e:"The NHS recorded big increases between 2015 and 2023."},
+{p:"Restaurants should be ___ about ingredients and share them with guests.",a:"transparent",w:["private","flexible","creative"],e:"Share the ingredients, not your secret recipes."},
+{p:"On a digital menu, guests can ___ dishes by their allergies.",a:"filter",w:["order","rate","price"],e:"A digital filter hides the dishes they cannot eat."},
+{p:"The waiter ___ an “allergy order” at the POS so that the chef can see it.",a:"flags",w:["cancels","prints","sells"],e:"Flagging means marking it clearly."},
+{p:"Shared oils and fryers can cause ___.",a:"cross-contact",w:["cross-training","cross-selling","overcooking"],e:"Cross-contact moves an allergen into a food that should not have it."},
+{p:"Since 2005 the words “contains sulphites” must appear on ___.",a:"wine bottles",w:["beer cans","bread bags","milk cartons"],e:"Sensitivity to chemical additives is a type of intolerance."},
+{p:"Staff need allergen ___ so that mistakes happen less often.",a:"training",w:["holidays","bonuses","uniforms"],e:"Training covers which allergies exist and how dangerous they are."},
+{p:"For a guest with a dairy ___, the smallest trace of dairy can be extremely dangerous.",a:"allergy",w:["intolerance","diet","habit"],e:"A lactose-intolerant guest may be fine with a little parmesan, but an allergic guest is not."}
+]},
+{id:"gap2",group:"Words",name:"Fill the gap 2",sub:"24 words in a word bank. Choose one for each sentence.",sheet:true,q:[
+{p:"Gluten is found in ___ flour.",a:"wheat",w:["rice","corn","potato"],e:"Wheat flour is used for bread and pasta."},
+{p:"The symptom called ___ means that the throat becomes bigger.",a:"throat swelling",w:["itching","indigestion","stomach ache"],e:"Throat swelling is a serious symptom of an allergic reaction."},
+{p:"___ must be able to prepare food for guests with special diets.",a:"Caterers",w:["Allergens","Traces","Tools"],e:"A caterer is a person or company that provides food for events."},
+{p:"Restaurants must ___ safe food for all their guests.",a:"provide",w:["flag","trigger","push"],e:"Provide means give or supply."},
+{p:"In ___, the body goes into shock and the airways close.",a:"anaphylaxis",w:["itching","indigestion","inflammation"],e:"Anaphylaxis is a very serious allergic reaction."},
+{p:"A food intolerance is a slow ___ reaction to a food.",a:"adverse",w:["hidden","labelled","marked"],e:"An adverse reaction is a negative, harmful reaction (reazione avversa)."},
+{p:"Red, itchy spots on the skin are called a ___.",a:"rash",w:["trace","trigger","counter"],e:"A skin rash can be a sign of an allergy."},
+{p:"Anaphylaxis is very serious and can be ___.",a:"life-threatening",w:["hidden","dietary","labelled"],e:"Life-threatening means dangerous enough to cause death."},
+{p:"The restaurant paid a ___ because it did not show the allergens on the menu.",a:"fine",w:["trace","trigger","counter"],e:"A fine is money you must pay as a punishment (una multa)."},
+{p:"Fear of a reaction can ___ the idea of eating out.",a:"push people off",w:["pull people into","bring people up","keep people on"],e:"Push people off the idea means make people not want to do it (scoraggiare)."},
+{p:"Even a small ___ of nuts can be dangerous.",a:"trace",w:["counter","rash","fine"],e:"A trace is a very small amount."},
+{p:"A small amount of peanut can ___ an allergic reaction.",a:"trigger",w:["provide","flag","mark"],e:"Trigger means start or cause (provocare)."},
+{p:"The feeling that makes you want to scratch your skin is called ___.",a:"itching",w:["wheat","counters","aprons"],e:"Itching can lead to swelling and, in some cases, to anaphylaxis."},
+{p:"___ means you can follow every ingredient from the supplier to the plate.",a:"Traceability",w:["Labelling","Sanitation","Ventilation"],e:"Traceability is the ability to follow an ingredient at every step."},
+{p:"Eggs can be a ___ risk in some sauces. The guest cannot see them.",a:"hidden",w:["obvious","visible","labelled"],e:"Hidden means not easy to see. Name the hidden risks on the menu."},
+{p:"One system keeps the menus and the kitchen ___ after a recipe changes.",a:"in sync",w:["in front","in bed","on holiday"],e:"In sync means matching and up to date."},
+{p:"The 14 ___ include milk, eggs, fish and peanuts.",a:"allergens",w:["counters","aprons","tools"],e:"Allergens are substances that can cause an allergic reaction."},
+{p:"Guests with special ___ needs, such as gluten-free, must tell the waiter.",a:"dietary",w:["adverse","labelled","marked"],e:"Dietary means connected with the food you eat."},
+{p:"Cooks wear ___ to keep their clothes clean.",a:"aprons",w:["counters","tools","flags"],e:"A dirty apron can also carry allergens."},
+{p:"Prepare the allergy dish on a clean ___, away from other food.",a:"counter",w:["trigger","flag","fine"],e:"A counter is the work surface in a kitchen."},
+{p:"All food in the fridge must be clearly ___.",a:"labelled",alt:["marked"],w:["hidden","provided","triggered"],e:"Labelled means it has a label with information."},
+{p:"Waiters must ___ every allergy order at the POS.",a:"flag",w:["provide","trigger","push"],e:"To flag means to mark something so that people notice it."},
+{p:"Knives, spoons and boards are kitchen ___.",a:"tools",w:["aprons","counters","traces"],e:"Separate tools stop cross-contact."},
+{p:"The allergy dish is clearly ___ so that it goes to the right guest.",a:"marked",alt:["labelled"],w:["hidden","adverse","dietary"],e:"Marked means it has a clear sign or label."}
+]},
+{id:"special",group:"Textbook and reading",name:"Special diets",sub:"Textbook page 220: allergies and intolerances.",q:[
+{p:"Why must caterers be able to provide special foods?",a:"Food allergies and intolerances are becoming more common.",w:["Most guests now follow a diet to lose weight.","A new law forbids wheat in restaurants.","Special foods are cheaper to prepare."],e:"The text says allergies and intolerances are becoming increasingly common."},
+{p:"What is a food allergy?",a:"A fast reaction of the immune system to a food protein.",w:["A slow reaction because the body lacks chemicals to digest a food.","A reaction caused only by dirty kitchens.","A fear of certain foods after an illness."],e:"The second option describes an intolerance."},
+{p:"Which group lists foods that can cause an allergic reaction?",a:"Fish, eggs, peanuts and milk",w:["Rice, potatoes, apples and olive oil","Lettuce, tomatoes, carrots and pears","Coffee, tea, sugar and salt"],e:"Gluten, fish, crustaceans, peanuts, tree nuts, milk, eggs and soya beans are named in the text."},
+{p:"Which symptoms usually belong to a food intolerance?",a:"Indigestion and abdominal pain",w:["Throat swelling and hindered breathing","A skin rash and anaphylactic shock","A high fever and a loss of voice"],e:"The other symptoms are linked to allergies."},
+{p:"When does a food intolerance usually develop?",a:"Long after eating large quantities of the food",w:["Within minutes of one small bite","Only after cooking the food at a high temperature","Only when the food is eaten with alcohol"],e:"Intolerances develop slowly. Allergies can start with a very small amount."},
+{p:"Which words must appear on wine bottles since 2005?",a:"“contains sulphites”",w:["“contains gluten”","“contains lactose”","“contains nuts”"],e:"Sulphites are chemical additives that can cause sensitivity."},
+{p:"Intolerance to cow’s milk is frequent among which people?",a:"Mediterranean, African, Asian and Native American people",w:["Northern European and North American people","Children under five years old","People who eat a lot of fish"],e:"This is stated at the end of the text."},
+{p:"Which sentence is true?",a:"Symptoms of intolerance are usually less dangerous than symptoms of allergy.",w:["Allergy symptoms are usually less dangerous than intolerance symptoms.","An intolerance is a fast reaction of the immune system.","An allergy happens because the body lacks chemicals for digestion."],e:"Allergies can be life-threatening. Intolerances usually are not."}
+]},
+{id:"coeliac",group:"Textbook and reading",name:"Coeliac disease",sub:"Textbook page 221.",q:[
+{p:"Coeliac disease is a common intolerance to…",a:"gluten",w:["glucose","lactose","sulphites"],e:"Glucose is a sugar. Gluten is the protein in wheat."},
+{p:"Coeliac disease causes inflammation of the…",a:"digestive system",w:["immune system","respiratory system","nervous system"],e:"It is an intolerance, so the problem is in digestion."},
+{p:"Gluten is an elastic…",a:"protein",w:["fat","sugar","vitamin"],e:"Gluten is a protein found in wheat flour."},
+{p:"Which flour contains gluten?",a:"wheat flour",w:["rice flour","cornmeal","potato starch"],e:"Bread, cereals and pasta are made with wheat flour."},
+{p:"What does gluten do in dough?",a:"It binds the dough.",w:["It makes the dough sweeter.","It makes the dough darker.","It helps the dough cook faster."],e:"Binds means holds together."},
+{p:"Which drinks can contain gluten?",a:"beer and malt whisky",w:["wine and cider","tea and coffee","milk and fruit juice"],e:"Malt comes from cereals that contain gluten."},
+{p:"Which foods may also contain gluten?",a:"crackers, pastries, cold meats, soups and sauces",w:["fresh fruit, plain rice and boiled eggs","olive oil, honey and plain yoghurt","grilled fish, salad and mineral water"],e:"Gluten is often hidden in prepared foods."},
+{p:"What is the only treatment for coeliac disease?",a:"a gluten-free diet",w:["taking a medicine every day","eating small portions of gluten","drinking more water with meals"],e:"There is no medicine or cure. People must avoid gluten."},
+{p:"Why can gluten-free food be difficult to find in Western countries?",a:"The Western diet is based on wheat.",w:["Gluten-free food is not allowed by law.","Wheat is a very rare cereal.","People in the West dislike cornmeal."],e:"That is why there are speciality shops selling gluten-free foods."},
+{p:"Which diet is based on cornmeal and can be an alternative?",a:"the Mexican diet",w:["the Eastern diet","the Northern European diet","the Mediterranean diet"],e:"Different cooking habits can offer alternatives to wheat."}
+]},
+{id:"reading",group:"Textbook and reading",name:"Allergies and eating out",sub:"Facts and figures from the reading text.",q:[
+{p:"Why can eating out be stressful for people with food allergies?",a:"It can be risky if the restaurant makes a mistake.",w:["Restaurants are always very expensive.","Guests wait a long time for a table.","Menus are written in many languages."],e:"Eating out can be a stressful and sometimes risky experience."},
+{p:"How many people have food allergies, according to the World Allergy Organization?",a:"as many as 250 million",w:["about 25 million","about 2.5 million","about 2.5 billion"],e:"The estimate is for the whole world."},
+{p:"In the US, what share of adults has a food allergy?",a:"one in ten",w:["one in a hundred","one in four","one in two"],e:"The rate is also growing significantly."},
+{p:"Compared with allergies, food intolerances are…",a:"more common and generally less serious",w:["less common and more serious","equally common and equally serious","less common but just as serious"],e:"Intolerances can still make people feel ill and avoid eating out."},
+{p:"How much of a food can cause a reaction in a person with an allergy?",a:"even the smallest trace",w:["only a large portion","only food eaten every day","only raw food"],e:"A trace can trigger a reaction."},
+{p:"What happens to the body during anaphylaxis?",a:"The body goes into shock and the airways close.",w:["The skin itches and the person feels tired.","The stomach hurts and the person cannot digest food.","The body temperature falls and the person falls asleep."],e:"Anaphylaxis can be fatal."},
+{p:"Between 2015 and 2023, what happened to children in UK hospitals with severe allergic reactions?",a:"The number rose by 72%.",w:["The number rose by 36%.","The number fell by 27%.","The number stayed the same."],e:"The NHS recorded a 72% increase."},
+{p:"What happened to adult hospital admissions over the same period?",a:"They rose by 36%.",w:["They rose by 72%.","They rose by 17%.","They fell by 36%."],e:"The adult increase was smaller than the children’s increase."},
+{p:"What is the only way to prevent a reaction?",a:"avoid the food",w:["take medicine before every meal","eat only a little of the food","cook the food for longer"],e:"There is no cure for allergies and intolerances."},
+{p:"What is the role of restaurants?",a:"to make dining reassuring and safe for guests",w:["to test guests for allergies","to treat allergic reactions","to teach guests about nutrition"],e:"Restaurants have an important role in keeping guests safe."}
+]},
+{id:"rules",group:"Restaurant safety",name:"Restaurant rules",sub:"What restaurants should do, from the slides.",q:[
+{p:"Which of these must be clear to guests?",a:"eggs, buttermilk or traces of nuts",w:["the chef’s secret recipes","the prices paid to suppliers","the cooking times of every dish"],e:"Declare ingredients fully, but do not share secret recipes."},
+{p:"How many allergens must be flagged in Europe?",a:"14",w:["8","10","18"],e:"Every non-pre-packed item with any of the 14 allergens must be flagged."},
+{p:"What can guests do with a digital menu?",a:"filter dishes by their allergies",w:["order without a waiter","see photos of the chefs","pay by card"],e:"A digital filter helps guests choose safe dishes."},
+{p:"Why do waiters use a mobile POS at the table?",a:"They see all menu information and answer questions on the spot.",w:["They can take orders without writing the dish names.","They can show guests how the food is cooked.","They can pay the kitchen staff."],e:"Staff stay informed so they can answer guest questions quickly."},
+{p:"Why is training important for dairy requests?",a:"A lactose-intolerant guest may accept a little parmesan, but a guest with a dairy allergy cannot.",w:["Guests with allergies are always more demanding.","All dairy requests have the same level of risk.","Only the kitchen staff need to know about dairy."],e:"Same request, very different risk."},
+{p:"Who needs allergen training?",a:"front of house and kitchen staff",w:["only the chefs","only new waiters","only the manager"],e:"Training needs continuous updates for everyone."},
+{p:"Which of these can cause cross-contact?",a:"shared oils and fryers",w:["clearly labelled menus","separate utensils","regular hand washing"],e:"Shared equipment, poor labelling, ventilation, aprons and poor sanitation can all cause it."},
+{p:"What can a cook do if there is no separate counter?",a:"tell the guest",w:["use the same counter without cleaning it","serve the dish faster","remove the allergy flag"],e:"The slide says: separate counters if possible, or tell the guest."},
+{p:"What does the UK chocolate maker Kinnerton do?",a:"It runs separate nut and nut-free factories.",w:["It uses one factory and cleans it every hour.","It has stopped using nuts completely.","It prints warnings only on the box."],e:"This is an example of avoiding cross-contact."},
+{p:"What is the result of flagging an allergy order?",a:"The guest knows their needs were acknowledged.",w:["The dish arrives sooner than other dishes.","The dish costs less.","The chef does not need to clean the area."],e:"The guest feels safe and reassured."}
+]},
+{id:"points",group:"Restaurant safety",name:"Which point of the six?",sub:"Match each action to the right point.",fixed:POINTS,noLetters:true,lead:"Which of the six points is this?",long:true,q:[
+{p:"Share the ingredients, but not your secret recipes.",a:POINTS[0],e:"Declare fully: guests need the ingredients."},
+{p:"Make sure you can trace every ingredient at every step.",a:POINTS[0],e:"Know every ingredient."},
+{p:"Tell guests about hidden risks such as buttermilk or traces of nuts.",a:POINTS[0],e:"Name the hidden risks."},
+{p:"Highlight common allergens on the menu even when the law does not require it.",a:POINTS[1],e:"This is best practice."},
+{p:"Let guests filter dishes by allergy on a digital menu.",a:POINTS[1],e:"Digital menus help guests choose."},
+{p:"Flag every non-pre-packed item that contains any of the 14 allergens.",a:POINTS[1],e:"This is the European rule."},
+{p:"Waiters check all menu information on a mobile POS at the table.",a:POINTS[2],e:"Waiters answer questions on the spot."},
+{p:"Tell staff about every menu update so that they can answer quickly.",a:POINTS[2],e:"Share every menu update."},
+{p:"Explain that a lactose-intolerant guest and a guest with a dairy allergy have very different risks.",a:POINTS[3],e:"Same request, very different risk."},
+{p:"Teach front of house and kitchen staff, with continuous updates.",a:POINTS[3],e:"Everyone needs training."},
+{p:"Show staff which allergies exist and how dangerous they are.",a:POINTS[3],e:"Training covers what, why and who."},
+{p:"Wash hands regularly and clean surfaces and tools between tasks.",a:POINTS[4],e:"This is a simple step against cross-contact."},
+{p:"Use separate utensils for different foods.",a:POINTS[4],e:"This keeps allergens apart."},
+{p:"Use separate counters if possible, or tell the guest.",a:POINTS[4],e:"Keep allergen-free food apart from allergens."},
+{p:"Make the dish in a separate area with separate tools.",a:POINTS[5],e:"This is step four of the allergy-order process."},
+{p:"Mark the dish clearly and serve it to the right guest.",a:POINTS[5],e:"This is the last step."},
+{p:"Flag an “allergy order” at the POS so that the chef sees it on the ticket.",a:POINTS[5],e:"The flag reaches the chef on the display or ticket."}
+]},
+{id:"situations",group:"Restaurant safety",name:"Real situations",sub:"What would a good professional do?",q:[
+{p:"A guest says she is allergic to peanuts. What should you do first?",a:"Flag an allergy order at the POS so that the chef sees it.",w:["Tell her the dish is probably fine.","Take the nuts off the plate and serve it as usual.","Ask her to tell the chef when the food arrives."],e:"A flagged order makes sure the request is never ignored."},
+{p:"A guest says, “I can’t have milk.” You do not know if it is an allergy or an intolerance. What is the best answer?",a:"Ask politely which one it is and tell the chef.",w:["Assume it is a mild intolerance.","Suggest that he removes the cheese himself.","Tell him that every dish is safe."],e:"The risk is very different, so staff must ask and pass the information on."},
+{p:"The chef changes a sauce recipe on Saturday. What should the restaurant do?",a:"Update the menu system and tell all the staff.",w:["Change the menu on Monday.","Tell only the kitchen team.","Change the menu only if a guest asks."],e:"One system keeps every menu up to date, and staff stay informed."},
+{p:"A guest asks what is in the dessert. The waiter does not know. What should he do?",a:"Check the menu information on the POS or ask the kitchen.",w:["Say that it is probably nut-free.","Tell the guest to read the menu again.","Say that the recipe is a secret."],e:"Never guess. Share ingredients, not secret recipes."},
+{p:"A cook has just cut bread. A guest with coeliac disease has ordered a gluten-free dish. What should the cook do?",a:"Wash his hands, clean the surface and tools, and use separate utensils.",w:["Wipe his hands on his apron and continue.","Use the same board but cut very quickly.","Prepare the dish first and clean later."],e:"Clean surfaces and tools between tasks, and use separate utensils."},
+{p:"Chips are fried in the same oil as breaded fish. A guest with coeliac disease asks for chips. What is the best answer?",a:"Explain that the oil is shared and offer a safe alternative.",w:["Say that potatoes are naturally gluten free, so there is no problem.","Give her a smaller portion.","Fry her chips first, before the fish."],e:"Shared oils and fryers can cause cross-contact."},
+{p:"The allergy dish is ready on the pass. What happens next?",a:"It is clearly marked and served to the right guest.",w:["It is placed with the other dishes for the table.","It is served to the first table that is ready.","It is left until the waiter has time."],e:"The last step is a clearly marked dish for the right guest."}
+]},
+{id:"safe1",group:"Safe or unsafe?",name:"Safe or unsafe? Allergies",sub:"Judge what staff do with guests who have allergies.",fixed:["Safe","Unsafe"],noLetters:true,long:true,lead:"Safe or unsafe?",q:[
+{p:"A guest says, “I have a nut allergy.” The waiter tells the chef.",a:"Safe",e:"The chef must know about every allergy."},
+{p:"The waiter says, “I think this dish has no nuts.” He does not check.",a:"Unsafe",e:"Never guess. Check the menu information or ask the kitchen."},
+{p:"The cook washes his hands before he makes the allergy dish.",a:"Safe",e:"Clean hands stop allergens from moving to the dish."},
+{p:"The cook uses the same knife for bread and for the gluten-free dish.",a:"Unsafe",e:"Bread has gluten. Use a clean knife."},
+{p:"The restaurant shows the allergens on the menu.",a:"Safe",e:"Guests can see the risks before they order."},
+{p:"The chef changes the recipe but does not tell the waiters.",a:"Unsafe",e:"Staff must know about every menu update."},
+{p:"The cook fries gluten-free chips in the same oil as breaded fish.",a:"Unsafe",e:"Shared oil can pass gluten to the chips."},
+{p:"The kitchen has a clean, separate area for allergy dishes.",a:"Safe",e:"A separate area keeps allergens away."},
+{p:"A guest has a milk allergy. The waiter takes the cheese off the plate and serves it.",a:"Unsafe",e:"Small traces of cheese stay on the food. The dish must be made again."},
+{p:"The waiter says, “Sorry, we use the same fryer for all fried food.”",a:"Safe",e:"It is honest. The guest can choose a safer dish."},
+{p:"A guest asks about ingredients. The waiter checks the information on the tablet.",a:"Safe",e:"The waiter gives clear and correct information."},
+{p:"A cook uses the same spoon for two sauces. One sauce has peanuts.",a:"Unsafe",e:"The spoon can carry peanuts to the other sauce."},
+{p:"The waiter marks the allergy dish and brings it to the right guest.",a:"Safe",e:"A marked dish goes to the right person."},
+{p:"Nobody teaches the new waiter which dishes have eggs.",a:"Unsafe",e:"All staff need allergen training."},
+{p:"The chef says, “A little milk is OK for every guest.”",a:"Unsafe",e:"A guest with a milk allergy can be in danger from a small amount."},
+{p:"The cook cleans the table and the tools before he makes the gluten-free pasta.",a:"Safe",e:"Clean tools and surfaces stop cross-contact."}
+]},
+{id:"tf",group:"Quick checks",name:"True or false?",sub:"Decide quickly. Read the explanation.",tf:true,noLetters:true,lead:"True or false?",long:true,q:[
+{p:"Food allergies and food intolerances are the same thing.",tf:false,e:"False. An allergy is a fast immune reaction. An intolerance is a slow digestion problem."},
+{p:"A very small amount of food can cause a reaction in a person with an allergy.",tf:true,e:"True. Even a trace can be enough."},
+{p:"Anaphylaxis is a mild reaction.",tf:false,e:"False. It is a very serious reaction that can be fatal."},
+{p:"There is a cure for food allergies.",tf:false,e:"False. The only way to prevent a reaction is to avoid the food."},
+{p:"Food intolerances are more common than food allergies.",tf:true,e:"True. They are also generally less serious."},
+{p:"Symptoms of intolerance are usually less dangerous than symptoms of allergy.",tf:true,e:"True. Intolerance often causes indigestion and abdominal pain."},
+{p:"Coeliac disease is an allergy to glucose.",tf:false,e:"False. It is an intolerance to gluten."},
+{p:"Beer can contain gluten.",tf:true,e:"True. So can malt whisky."},
+{p:"A gluten-free diet is the only treatment for coeliac disease.",tf:true,e:"True."},
+{p:"The Western diet is based on wheat.",tf:true,e:"True. That is why speciality shops sell gluten-free foods."},
+{p:"In Europe, restaurants must flag allergens only when a guest asks.",tf:false,e:"False. Every non-pre-packed item with any of the 14 allergens must be flagged."},
+{p:"Restaurants should share their secret recipes with every guest.",tf:false,e:"False. They should share the ingredients, not the secret recipes."},
+{p:"A lactose-intolerant guest may be fine with a little grated parmesan.",tf:true,e:"True. A guest with a dairy allergy cannot eat even a trace of dairy."},
+{p:"If a restaurant has no separate counter, it can tell the guest.",tf:true,e:"True. Separate counters are best, but guests must be told."}
+]},
+{id:"sort",group:"Quick checks",name:"Allergy or intolerance?",sub:"Which one fits each description? Some fit both.",fixed:["Allergy","Intolerance","Both"],noLetters:true,lead:"Allergy, intolerance or both?",long:true,q:[
+{p:"A fast reaction",a:"Allergy",e:"Allergies are fast."},
+{p:"A slow reaction",a:"Intolerance",e:"Intolerances develop slowly."},
+{p:"The immune system reacts to a food protein.",a:"Allergy",e:"This is the definition of a food allergy."},
+{p:"The body does not have the chemicals needed to digest the food.",a:"Intolerance",e:"This is a digestion problem."},
+{p:"Throat swelling and hindered breathing",a:"Allergy",e:"These are serious allergy symptoms."},
+{p:"Indigestion and abdominal pain",a:"Intolerance",e:"These symptoms are usually less dangerous."},
+{p:"Anaphylactic shock",a:"Allergy",e:"It can be life-threatening."},
+{p:"A skin rash",a:"Allergy",e:"A rash can be an allergy symptom."},
+{p:"Even a very small trace can be dangerous.",a:"Allergy",e:"People with allergies must avoid every trace."},
+{p:"It develops long after eating large quantities of food.",a:"Intolerance",e:"Examples are wheat, coffee and dairy products."},
+{p:"Sensitivity to chemical additives such as sulphites",a:"Intolerance",e:"That is why wine bottles say “contains sulphites”."},
+{p:"Coeliac disease",a:"Intolerance",e:"It is an intolerance to gluten."},
+{p:"Sensitivity to cow’s milk",a:"Intolerance",e:"It is frequent among Mediterranean, African, Asian and Native American people."},
+{p:"Usually less dangerous",a:"Intolerance",e:"Allergies can be life-threatening."},
+{p:"Can be life-threatening",a:"Allergy",e:"Anaphylaxis can be fatal."},
+{p:"The body reacts badly to a food.",a:"Both",e:"Both are adverse reactions to food. The cause and the speed are different."},
+{p:"There is no cure.",a:"Both",e:"For allergies and intolerances, avoiding the food is the only way to prevent a reaction."},
+{p:"The person must avoid the food.",a:"Both",e:"Avoiding the food is the only way to prevent a reaction."},
+{p:"Milk can cause it.",a:"Both",e:"A person can have a milk allergy or an intolerance to cow’s milk."},
+{p:"Gluten can cause it.",a:"Both",e:"Gluten appears in the list of allergy foods, and gluten intolerance causes coeliac disease."},
+{p:"It is becoming more common.",a:"Both",e:"Allergies and intolerances are becoming increasingly common, so caterers must be ready."},
+{p:"It can make a person feel ill and put them off eating out.",a:"Both",e:"Intolerances are less serious, but they can still push people off the idea of eating out."},
+{p:"The waiter must tell the chef about the guest’s need.",a:"Both",e:"Restaurants must take every request seriously, because the risk is different for each guest."}
+]}
+];
+
+const ALLERGENS=[
+["Celery","Sedano"],["Cereals with gluten","Cereali contenenti glutine"],["Crustaceans","Crostacei"],["Eggs","Uova"],["Fish","Pesce"],["Lupin","Lupino"],["Milk","Latte"],["Mollusks","Molluschi"],["Mustard","Senape"],["Peanuts","Arachidi"],["Sesame","Sesamo"],["Soybeans","Soia"],["Sulfites (sulphites)","Solfiti"],["Tree nuts","Frutta a guscio"]
+];
+const NOT_ALLERGENS=["Rice","Potatoes","Tomatoes","Strawberries","Kiwi","Beef","Honey","Maize (corn)","Garlic","Pork"];
+
+const STEPS=[
+"The guest chooses from a clearly labelled menu.",
+"The waiter flags an “allergy order” at the POS.",
+"The chef sees the flag on the display or ticket.",
+"The dish is made in a separate area with separate tools.",
+"The dish is clearly marked and served to the right guest."
+];
+/*ENDDATA*/
+
+/* ---------- helpers ---------- */
+const $=s=>document.querySelector(s);
+const stage=$("#stage");
+const esc=s=>String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+const shuffle=a=>{const r=a.slice();for(let i=r.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[r[i],r[j]]=[r[j],r[i]];}return r;};
+const store={
+  get(k,d){try{const v=localStorage.getItem("asd:"+k);return v?JSON.parse(v):d;}catch(e){return d;}},
+  set(k,v){try{localStorage.setItem("asd:"+k,JSON.stringify(v));}catch(e){}}
+};
+const byT={};CARDS.forEach(c=>{byT[c.t]=c;});
+
+const MODES=[["cards","Flashcards"],["quiz","Quizzes"],["match","Match"],["allergens","14 allergens"],["order","Order the steps"]];
+const S={
+  mode:"cards",
+  it:true,
+  fc:{topic:"all",deck:CARDS.slice(),idx:0,flipped:false,known:new Set(store.get("known",[]))},
+  quiz:{setId:null},
+  match:null,
+  al:null,
+  ord:null
+};
+
+/* ---------- tabs ---------- */
+function renderTabs(){
+  $("#tabs").innerHTML=MODES.map(([id,l])=>`<button class="tab" role="tab" id="tab-${id}" aria-selected="${S.mode===id}" data-a="mode" data-id="${id}">${esc(l)}</button>`).join("");
+  stage.setAttribute("aria-labelledby","tab-"+S.mode);
+}
+function render(){
+  renderTabs();
+  ({cards:renderCards,quiz:renderQuiz,match:renderMatch,allergens:renderAllergens,order:renderOrder})[S.mode]();
+}
+
+/* ---------- flashcards ---------- */
+function fcBuild(){
+  const f=S.fc;
+  let d=CARDS;
+  if(f.topic==="learning")d=CARDS.filter(c=>!f.known.has(c.t));
+  else if(f.topic!=="all")d=CARDS.filter(c=>c.k===f.topic);
+  f.deck=d.slice();f.idx=0;f.flipped=false;
+}
+function renderCards(){
+  const f=S.fc;const c=f.deck[f.idx];
+  const topics=[["all","All words"],["health","Body & health"],["food","Food & allergens"],["rest","Restaurant"],["learning","Still learning"]];
+  const chips=topics.map(([id,l])=>`<button class="chip${f.topic===id?" on":""}" data-a="fcTopic" data-id="${id}" aria-pressed="${f.topic===id}">${esc(l)}</button>`).join("");
+  let body;
+  if(!c){
+    body=`<div class="empty"><h3>No cards in this list</h3><p>You have marked every word as learned. Choose “All words” to revise again.</p></div>`;
+  }else{
+    const front=`<span class="mono">Italian · ${esc(TOPIC[c.k])}</span><span class="term${c.it.length>16?" mid":""}">${esc(c.it)}</span><span class="hint">Press to see the English word</span>`;
+    const back=`<span class="mono">English</span><span class="term">${esc(c.t)}</span><span class="def">${esc(c.d)}</span><span class="ex">“${esc(c.x)}”</span>`;
+    const pct=Math.round((f.idx+1)/f.deck.length*100);
+    body=`<div class="row between"><span class="mono">Card ${f.idx+1} of ${f.deck.length}</span><span class="mono">${f.known.size} of ${CARDS.length} learned</span></div>
+    <div class="bar" aria-hidden="true"><i style="width:${pct}%"></i></div>
+    <button class="fcard${f.flipped?" back":""}" data-a="flip" aria-label="Flashcard: ${esc(c.it)}. Press to turn it over.">${f.flipped?back:front}</button>
+    <div class="row">
+      <button class="btn" data-a="fcPrev">Back</button>
+      <button class="btn" data-a="fcAgain">Still learning</button>
+      <button class="btn good" data-a="fcGot">I know it</button>
+      <button class="btn" data-a="fcNext">Next</button>
+      <button class="link" data-a="fcShuffle">Shuffle</button>
+    </div>`;
+  }
+  stage.innerHTML=`<div class="stack"><div class="row">${chips}</div>${body}</div>`;
+}
+
+/* ---------- quizzes ---------- */
+function prep(q,set,ix){
+  let opts;
+  if(set.tf)opts=[{t:"True",ok:q.tf===true},{t:"False",ok:q.tf===false}];
+  else if(set.fixed)opts=set.fixed.map(t=>({t,ok:t===q.a}));
+  else opts=shuffle([q.a].concat(q.w)).map(t=>({t,ok:t===q.a}));
+  return {ix,p:q.p,opts,e:q.e};
+}
+function startQuiz(id,onlyIx){
+  const set=QUIZZES.find(s=>s.id===id);
+  if(set.sheet){
+    S.quiz={setId:id,sheet:true,ans:set.q.map(()=>""),marks:set.q.map(()=>null),checked:false,revealed:false};
+    render();return;
+  }
+  let list=set.q.map((q,ix)=>prep(q,set,ix));
+  if(onlyIx)list=list.filter(q=>onlyIx.indexOf(q.ix)>-1);
+  S.quiz={setId:id,qs:shuffle(list),i:0,score:0,picked:null,missed:[],done:false,review:!!onlyIx};
+  render();
+}
+function fmtPrompt(q,filled){
+  if(q.p.indexOf("___")<0)return esc(q.p);
+  const parts=q.p.split("___");
+  return esc(parts[0])+`<span class="blank">${filled?esc(filled):"&nbsp;&nbsp;&nbsp;"}</span>`+esc(parts[1]||"");
+}
+function renderQuiz(){
+  const Q=S.quiz;
+  if(!Q.setId){
+    const groups=[];
+    QUIZZES.forEach(s=>{let g=groups.find(x=>x.name===s.group);if(!g){g={name:s.group,sets:[]};groups.push(g);}g.sets.push(s);});
+    stage.innerHTML=`<div class="stack">`+groups.map(g=>`<section class="group"><h2>${esc(g.name)}</h2><div class="sets">`+g.sets.map(s=>{
+      const best=store.get("best:"+s.id,null);
+      return `<button class="set" data-a="qStart" data-id="${s.id}"><strong>${esc(s.name)}</strong><span>${esc(s.sub)}</span><span class="mono">${s.q.length} questions${best!==null?` · best ${best}/${s.q.length}`:""}</span></button>`;
+    }).join("")+`</div></section>`).join("")+`</div>`;
+    return;
+  }
+  const set=QUIZZES.find(s=>s.id===Q.setId);
+  if(set.sheet){renderSheet(set);return;}
+  if(Q.done){renderResults(set);return;}
+  const q=Q.qs[Q.i];const answered=Q.picked!==null;
+  const filled=answered?q.opts.find(o=>o.ok).t:"";
+  const pct=Math.round((Q.i+(answered?1:0))/Q.qs.length*100);
+  const letters="ABCDEF";
+  const opts=q.opts.map((o,i)=>{
+    let cls="opt";
+    if(set.noLetters)cls+=" nol";
+    if(!answered)cls+=" picked-none";
+    else if(o.ok)cls+=" correct";
+    else if(i===Q.picked)cls+=" wrong";
+    else cls+=" dim";
+    return `<button class="${cls}" data-a="pick" data-i="${i}"${answered?` aria-disabled="true"`:""}>${set.noLetters?"":`<span class="ltr">${letters[i]}</span>`}<span>${esc(o.t)}</span></button>`;
+  }).join("");
+  const colsCls=(set.fixed&&set.fixed.length>2)||set.tf||(set.fixed&&set.fixed.length===2)?" cols":"";
+  let fb="";
+  if(answered){
+    const good=q.opts[Q.picked].ok;
+    fb=`<div class="fb${good?"":" no"}" role="status"><b>${good?"Correct":"Not quite"}</b>${esc(q.e)}</div>
+    <div class="row"><button class="btn primary" data-a="next" id="nextBtn">${Q.i+1>=Q.qs.length?"See results":"Next question"}</button></div>`;
+  }
+  const eyebrow=set.lead||"Choose the best answer";
+  stage.innerHTML=`<div class="stack">
+    <div class="row between"><button class="link" data-a="qHome">All quizzes</button><span class="mono">${esc(set.name)} · ${Q.i+1} of ${Q.qs.length} · ${Q.score} correct</span></div>
+    <div class="bar" aria-hidden="true"><i style="width:${pct}%"></i></div>
+    <span class="eyebrow">${esc(eyebrow)}</span>
+    <h2 class="prompt${set.long?" long":""}">${fmtPrompt(q,filled)}</h2>
+    <div class="opts${colsCls}">${opts}</div>
+    ${fb}
+  </div>`;
+  if(answered){const nb=$("#nextBtn");if(nb)nb.focus();}
+}
+/* word-bank worksheet: all sentences on one page, drop-down menu in each gap */
+function sheetBank(set){
+  const m=new Map();
+  set.q.forEach(q=>m.set(q.a,(m.get(q.a)||0)+1));
+  return Array.from(m,([w,n])=>({w,n})).sort((a,b)=>a.w.toLowerCase().localeCompare(b.w.toLowerCase()));
+}
+function bankHtml(set,ans){
+  const used=new Map();
+  ans.forEach(v=>{if(v)used.set(v,(used.get(v)||0)+1);});
+  return sheetBank(set).map(b=>`<span class="bw${(used.get(b.w)||0)>=b.n?" used":""}">${esc(b.w)}${b.n>1?" ×"+b.n:""}</span>`).join("");
+}
+function renderSheet(set){
+  const Q=S.quiz;
+  const bank=sheetBank(set);
+  const total=set.q.length;
+  const allOk=Q.checked&&Q.marks.every(m=>m===true);
+  const showExp=Q.revealed||allOk;
+  const items=set.q.map((q,i)=>{
+    const parts=q.p.split("___");
+    const val=Q.revealed?q.a:Q.ans[i];
+    let cls="gs",st=`<span class="st" id="st${i}"></span>`;
+    if(Q.revealed){cls+=" ok";st=`<span class="st ok" id="st${i}">Answer</span>`;}
+    else if(Q.checked&&Q.marks[i]===true){cls+=" ok";st=`<span class="st ok" id="st${i}">Correct</span>`;}
+    else if(Q.checked&&Q.marks[i]===false){cls+=" no";st=`<span class="st no" id="st${i}">${val?"Try again":"Choose a word"}</span>`;}
+    const opts=`<option value="">choose a word</option>`+bank.map(b=>`<option value="${esc(b.w)}"${val===b.w?" selected":""}>${esc(b.w)}</option>`).join("");
+    return `<li><div class="sline">${esc(parts[0])}<select class="${cls}" id="g${i}" data-g="${i}" aria-label="Gap in sentence ${i+1}"${Q.revealed?" disabled":""}>${opts}</select>${esc(parts[1]||"")} ${st}</div>${showExp?`<div class="xp">${esc(q.e)}</div>`:""}</li>`;
+  }).join("");
+  let fb="";
+  if(Q.checked&&!Q.revealed){
+    const n=Q.marks.filter(m=>m===true).length;
+    fb=`<div class="fb${allOk?"":" no"}" id="sheetFb" role="status"><b>${n} of ${total} correct</b>${allOk?"Every gap is right. Read the notes under each sentence.":"Change the red answers and check again."}</div>`;
+  }
+  stage.innerHTML=`<div class="stack">
+    <div class="row between"><button class="link" data-a="qHome">All quizzes</button><span class="mono">${esc(set.name)} · ${total} sentences</span></div>
+    <div><span class="eyebrow">Word bank</span><div class="bank" id="bank">${bankHtml(set,Q.revealed?set.q.map(q=>q.a):Q.ans)}</div></div>
+    <span class="eyebrow">Choose the best word from the menu in each gap</span>
+    <ol class="sheet">${items}</ol>
+    ${fb}
+    <div class="row">
+      ${Q.revealed?"":`<button class="btn primary" data-a="sheetCheck">Check answers</button><button class="btn" data-a="sheetShow">Show answers</button>`}
+      <button class="btn" data-a="qRestart">Start again</button>
+    </div>
+  </div>`;
+}
+function renderResults(set){
+  const Q=S.quiz;const n=Q.qs.length;const pct=Q.score/n;
+  const msg=pct>=0.9?"Excellent. You are ready for service.":pct>=0.7?"Good work. Look at the answers you missed.":"Keep practising. Try the flashcards, then take this quiz again.";
+  const miss=Q.missed.map(m=>`<article><strong>${fmtPrompt(m,m.opts.find(o=>o.ok).t)}</strong><span class="ans">Correct answer: ${esc(m.opts.find(o=>o.ok).t)}</span><span>${esc(m.e)}</span></article>`).join("");
+  stage.innerHTML=`<div class="res">
+    <span class="eyebrow">${esc(set.name)}${Q.review?" · review":""}</span>
+    <div class="score">${Q.score} / ${n}</div>
+    <p>${esc(msg)}</p>
+    <div class="row">
+      ${Q.missed.length?`<button class="btn primary" data-a="qReview">Practise the ${Q.missed.length} I missed</button>`:""}
+      <button class="btn" data-a="qRestart">Start again</button>
+      <button class="btn" data-a="qHome">All quizzes</button>
+    </div>
+    ${Q.missed.length?`<h2>Review</h2><div class="miss">${miss}</div>`:""}
+  </div>`;
+}
+function pick(i){
+  const Q=S.quiz;if(Q.picked!==null||Q.done)return;
+  const q=Q.qs[Q.i];if(!q.opts[i])return;
+  Q.picked=i;
+  if(q.opts[i].ok)Q.score++;else Q.missed.push(q);
+  renderQuiz();
+}
+function nextQ(){
+  const Q=S.quiz;if(Q.picked===null)return;
+  if(Q.i+1>=Q.qs.length){
+    Q.done=true;
+    if(!Q.review){const best=store.get("best:"+Q.setId,0);if(Q.score>best)store.set("best:"+Q.setId,Q.score);}
+  }else{Q.i++;Q.picked=null;}
+  renderQuiz();
+  window.scrollTo({top:Math.max(0,stage.getBoundingClientRect().top+window.scrollY-80)});
+}
+
+/* ---------- match ---------- */
+function startMatch(topic){
+  const pool=topic==="all"?CARDS:CARDS.filter(c=>c.k===topic);
+  const pick6=shuffle(pool).slice(0,6).map(c=>c.t);
+  S.match={topic,left:shuffle(pick6),right:shuffle(pick6),l:null,r:null,done:[],tries:0,flash:null};
+}
+function renderMatch(){
+  if(!S.match)startMatch("all");
+  const m=S.match;
+  const topics=[["all","Mixed"],["health","Body & health"],["food","Food & allergens"],["rest","Restaurant"]];
+  const chips=topics.map(([id,l])=>`<button class="chip${m.topic===id?" on":""}" data-a="mTopic" data-id="${id}" aria-pressed="${m.topic===id}">${esc(l)}</button>`).join("");
+  const cls=(t,side)=>{
+    let c="mitem"+(side==="l"?" term":"");
+    if(m.done.indexOf(t)>-1)c+=" done";
+    else if(m.flash&&((side==="l"&&m.flash.l===t)||(side==="r"&&m.flash.r===t)))c+=" bad";
+    else if(m[side]===t)c+=" sel";
+    return c;
+  };
+  const left=m.left.map(t=>`<button class="${cls(t,"l")}" data-a="mL" data-id="${esc(t)}">${esc(t)}</button>`).join("");
+  const right=m.right.map(t=>`<button class="${cls(t,"r")}" data-a="mR" data-id="${esc(t)}">${esc(byT[t].it)}</button>`).join("");
+  const all=m.done.length===m.left.length;
+  stage.innerHTML=`<div class="stack">
+    <div class="row">${chips}</div>
+    <div class="row between"><span class="eyebrow">Tap an English word, then tap its Italian translation</span><span class="mono">${m.done.length} of ${m.left.length} matched · ${m.tries} tries</span></div>
+    <div class="mgrid"><div class="mcol">${left}</div><div class="mcol">${right}</div></div>
+    ${all?`<div class="fb" role="status"><b>All matched</b>${m.tries===m.left.length?"Perfect round. No mistakes.":"You needed "+m.tries+" tries. Six is perfect."}</div>`:""}
+    <div class="row"><button class="btn primary" data-a="mNew">${all?"Play another round":"New words"}</button></div>
+  </div>`;
+}
+function matchClick(side,t){
+  const m=S.match;if(m.flash||m.done.indexOf(t)>-1)return;
+  m[side]=(m[side]===t)?null:t;
+  if(m.l&&m.r){
+    m.tries++;
+    if(m.l===m.r){m.done.push(m.l);m.l=m.r=null;}
+    else{
+      const f={l:m.l,r:m.r};m.flash=f;
+      setTimeout(()=>{if(S.match===m&&m.flash===f){m.flash=null;m.l=m.r=null;if(S.mode==="match")renderMatch();}},750);
+    }
+  }
+  renderMatch();
+}
+
+/* ---------- 14 allergens ---------- */
+function startAl(){
+  const items=ALLERGENS.map(a=>({n:a[0],ok:true})).concat(NOT_ALLERGENS.map(n=>({n,ok:false})));
+  S.al={items:shuffle(items),sel:new Set(),checked:false};
+}
+function renderAllergens(){
+  if(!S.al)startAl();
+  const A=S.al;
+  const chips=A.items.map(it=>{
+    let c="food";const on=A.sel.has(it.n);
+    if(A.checked){
+      if(on&&it.ok)c+=" ok";else if(on&&!it.ok)c+=" bad";else if(!on&&it.ok)c+=" miss";
+    }else if(on)c+=" sel";
+    return `<button class="${c}" data-a="alToggle" data-id="${esc(it.n)}" aria-pressed="${on}"${A.checked?` aria-disabled="true"`:""}>${esc(it.n)}</button>`;
+  }).join("");
+  let result="";
+  if(A.checked){
+    const hits=A.items.filter(i=>i.ok&&A.sel.has(i.n)).length;
+    const wrong=A.items.filter(i=>!i.ok&&A.sel.has(i.n)).length;
+    const missed=14-hits;
+    result=`<div class="fb${hits===14&&wrong===0?"":" no"}" role="status"><b>${hits} of 14 found</b>${wrong?wrong+" wrong choice"+(wrong>1?"s":"")+" (red). ":""}${missed?missed+" allergen"+(missed>1?"s":"")+" missed (dashed outline). ":""}${hits===14&&wrong===0?"Perfect. You know the European list.":"Foods such as strawberries and kiwi cause allergies for some people, but they are not on the list of 14."}</div>
+    <h2>The 14 European allergens</h2>
+    <ul class="list14">${ALLERGENS.map(a=>`<li>${esc(a[0])}${S.it?`<small>${esc(a[1])}</small>`:""}</li>`).join("")}</ul>`;
+  }
+  stage.innerHTML=`<div class="stack">
+    <div class="row between"><span class="eyebrow">Tap every food that is one of the 14 European allergens</span><span class="mono">${A.sel.size} selected</span></div>
+    <div class="chips">${chips}</div>
+    <div class="row">${A.checked?`<button class="btn primary" data-a="alNew">Play again</button>`:`<button class="btn primary" data-a="alCheck"${A.sel.size?"":" disabled"}>Check my answers</button>`}</div>
+    ${result}
+  </div>`;
+}
+
+/* ---------- order the steps ---------- */
+function startOrd(){
+  let pool;
+  do{pool=shuffle([0,1,2,3,4]);}while(pool.every((v,i)=>v===i));
+  S.ord={pool,placed:[],checked:false};
+}
+function renderOrder(){
+  if(!S.ord)startOrd();
+  const O=S.ord;
+  const slots=[0,1,2,3,4].map(i=>{
+    const id=O.placed[i];const has=id!==undefined;
+    let c="slot"+(has?" filled":"");
+    if(O.checked&&has)c+=(id===i)?" ok":" no";
+    const inner=`<span class="n">${i+1}</span><span class="${has?"":"ph"}">${has?esc(STEPS[id]):"Tap a step below"}</span>`;
+    return `<li>${has&&!O.checked?`<button class="${c}" data-a="oRemove" data-i="${i}" aria-label="Remove step ${i+1}">${inner}</button>`:`<div class="${c}">${inner}</div>`}</li>`;
+  }).join("");
+  const pool=O.pool.filter(id=>O.placed.indexOf(id)<0).map(id=>`<li><button class="step" data-a="oPlace" data-id="${id}"${O.checked?" disabled":""}>${esc(STEPS[id])}</button></li>`).join("");
+  let fb="";
+  if(O.checked){
+    const right=O.placed.filter((id,i)=>id===i).length;
+    fb=right===5?`<div class="fb" role="status"><b>Correct order</b>The guest knows their needs were acknowledged.</div>`:`<div class="fb no" role="status"><b>${right} of 5 in the right place</b>Green steps are right. Red steps are in the wrong place. Try again or show the answer.</div>`;
+  }
+  const full=O.placed.length===5;
+  stage.innerHTML=`<div class="stack">
+    <div><span class="eyebrow">Point 6 of 6: Flag requests to the chef</span><h2 class="prompt long" style="margin-top:6px">Put the allergy-order process in the right order.</h2></div>
+    <ol class="slots" style="padding:0;list-style:none">${slots}</ol>
+    ${pool?`<div><span class="mono">Steps to place</span><ul class="pool" style="margin-top:8px">${pool}</ul></div>`:""}
+    ${fb}
+    <div class="row">
+      ${O.checked?"":`<button class="btn primary" data-a="oCheck"${full?"":" disabled"}>Check order</button>`}
+      <button class="btn" data-a="oReset">Try again</button>
+      <button class="btn" data-a="oShow">Show the answer</button>
+    </div>
+  </div>`;
+}
+
+/* ---------- events ---------- */
+const A={
+  mode(d){S.mode=d.id;render();},
+  flip(){S.fc.flipped=!S.fc.flipped;renderCards();},
+  fcNext(){const f=S.fc;if(!f.deck.length)return;f.idx=(f.idx+1)%f.deck.length;f.flipped=false;renderCards();},
+  fcPrev(){const f=S.fc;if(!f.deck.length)return;f.idx=(f.idx-1+f.deck.length)%f.deck.length;f.flipped=false;renderCards();},
+  fcGot(){const f=S.fc;const c=f.deck[f.idx];if(!c)return;f.known.add(c.t);store.set("known",Array.from(f.known));A.fcNext();},
+  fcAgain(){const f=S.fc;const c=f.deck[f.idx];if(!c)return;f.known.delete(c.t);store.set("known",Array.from(f.known));A.fcNext();},
+  fcTopic(d){S.fc.topic=d.id;fcBuild();renderCards();},
+  fcShuffle(){const f=S.fc;f.deck=shuffle(f.deck);f.idx=0;f.flipped=false;renderCards();},
+  qStart(d){startQuiz(d.id);},
+  qHome(){S.quiz={setId:null};renderQuiz();},
+  qRestart(){startQuiz(S.quiz.setId);},
+  qReview(){startQuiz(S.quiz.setId,S.quiz.missed.map(m=>m.ix));},
+  sheetCheck(){
+    const Q=S.quiz;const set=QUIZZES.find(s=>s.id===Q.setId);
+    Q.marks=set.q.map((q,i)=>Q.ans[i]?(Q.ans[i]===q.a||(q.alt&&q.alt.indexOf(Q.ans[i])>-1)):false);
+    Q.checked=true;
+    const n=Q.marks.filter(m=>m===true).length;
+    if(n>store.get("best:"+set.id,0))store.set("best:"+set.id,n);
+    renderSheet(set);
+  },
+  sheetShow(){S.quiz.revealed=true;renderSheet(QUIZZES.find(s=>s.id===S.quiz.setId));},
+  pick(d){pick(parseInt(d.i,10));},
+  next(){nextQ();},
+  mTopic(d){startMatch(d.id);renderMatch();},
+  mNew(){startMatch(S.match?S.match.topic:"all");renderMatch();},
+  mL(d){matchClick("l",d.id);},
+  mR(d){matchClick("r",d.id);},
+  alToggle(d){const a=S.al;if(a.checked)return;if(a.sel.has(d.id))a.sel.delete(d.id);else a.sel.add(d.id);renderAllergens();},
+  alCheck(){S.al.checked=true;renderAllergens();},
+  alNew(){startAl();renderAllergens();},
+  oPlace(d){const o=S.ord;if(o.checked||o.placed.length>=5)return;o.placed.push(parseInt(d.id,10));renderOrder();},
+  oRemove(d){const o=S.ord;if(o.checked)return;o.placed.splice(parseInt(d.i,10),1);renderOrder();},
+  oCheck(){if(S.ord.placed.length===5){S.ord.checked=true;renderOrder();}},
+  oReset(){startOrd();renderOrder();},
+  oShow(){S.ord.placed=[0,1,2,3,4];S.ord.checked=true;renderOrder();}
+};
+document.addEventListener("click",e=>{
+  const b=e.target.closest("[data-a]");
+  if(!b||b.disabled)return;
+  const fn=A[b.dataset.a];
+  if(fn)fn(b.dataset);
+});
+document.addEventListener("change",e=>{
+  const t=e.target;
+  if(!t||!t.matches||!t.matches("select[data-g]"))return;
+  const Q=S.quiz;if(!Q.sheet)return;
+  const i=parseInt(t.dataset.g,10);
+  Q.ans[i]=t.value;Q.marks[i]=null;
+  t.classList.remove("ok","no");
+  const st=$("#st"+i);if(st){st.textContent="";st.className="st";}
+  const fb=$("#sheetFb");if(fb)fb.remove();
+  const set=QUIZZES.find(s=>s.id===Q.setId);
+  const b=$("#bank");if(b)b.innerHTML=bankHtml(set,Q.ans);
+});
+document.addEventListener("keydown",e=>{
+  if(e.target.closest&&e.target.closest("input,textarea"))return;
+  if(S.mode==="cards"){
+    if(e.key==="ArrowRight"){A.fcNext();}
+    else if(e.key==="ArrowLeft"){A.fcPrev();}
+  }else if(S.mode==="quiz"&&S.quiz.setId&&!S.quiz.done&&S.quiz.picked===null){
+    const k=e.key.toLowerCase();
+    const idx="123456".indexOf(k);
+    const ix=idx>-1?idx:"abcdef".indexOf(k);
+    if(ix>-1&&k.length===1)pick(ix);
+  }
+});
+fcBuild();
+render();
+})();
+</script>
+
+</body></html>
