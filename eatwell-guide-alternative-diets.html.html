@@ -1,0 +1,856 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Eatwell Quest</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&display=swap">
+<style>
+/* Layout: sticky bar with XP, a home "mission map" of colour-coded cards (one colour per Eatwell food group), single-column missions with big pictures and instant feedback. */
+:root{
+  --display:'Bricolage Grotesque','Trebuchet MS',system-ui,sans-serif;
+  --body:'Atkinson Hyperlegible','Segoe UI',system-ui,sans-serif;
+  --bg:#F4F8F3; --surface:#FFFFFF; --ink:#13201A; --muted:#4E6057; --line:#D5E0D7;
+  --accent:#E86F00; --on-accent:#1C0F00;
+  --good:#17702F; --good-bg:#E1F3E5; --bad:#B3321F; --bad-bg:#FBE5E1;
+  --veg:#1B7F37; --on-veg:#FFFFFF;
+  --starch:#F5B301; --on-starch:#2A1E00;
+  --dairy:#1E6BC0; --on-dairy:#FFFFFF;
+  --protein:#C92A66; --on-protein:#FFFFFF;
+  --oil:#7C5CC4; --on-oil:#FFFFFF;
+  --treat:#5D6B64; --on-treat:#FFFFFF;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0E1612; --surface:#16211B; --ink:#E9F1EB; --muted:#A5B8AC; --line:#2A3A31;
+    --accent:#FF9A3D; --on-accent:#1C0F00;
+    --good:#5BD680; --good-bg:#13301D; --bad:#FF8A78; --bad-bg:#3A1B16;
+    --veg:#46C26B; --on-veg:#06210F;
+    --starch:#F5B301; --on-starch:#2A1E00;
+    --dairy:#5BA3F0; --on-dairy:#04203F;
+    --protein:#F0709F; --on-protein:#3D0820;
+    --oil:#A38BEA; --on-oil:#1E0F4A;
+    --treat:#8FA39B; --on-treat:#101A16;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0E1612; --surface:#16211B; --ink:#E9F1EB; --muted:#A5B8AC; --line:#2A3A31;
+  --accent:#FF9A3D; --on-accent:#1C0F00;
+  --good:#5BD680; --good-bg:#13301D; --bad:#FF8A78; --bad-bg:#3A1B16;
+  --veg:#46C26B; --on-veg:#06210F;
+  --starch:#F5B301; --on-starch:#2A1E00;
+  --dairy:#5BA3F0; --on-dairy:#04203F;
+  --protein:#F0709F; --on-protein:#3D0820;
+  --oil:#A38BEA; --on-oil:#1E0F4A;
+  --treat:#8FA39B; --on-treat:#101A16;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:400 17px/1.5 var(--body)}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:30;background:var(--bg)}
+button{font:inherit;color:inherit;cursor:pointer}
+h1,h2,h3,h4{font-family:var(--display);line-height:1.1;text-wrap:balance;margin:0}
+p{margin:0}
+:focus-visible{outline:3px solid var(--ink);outline-offset:3px}
+[data-g="veg"]{--c:var(--veg);--o:var(--on-veg)}
+[data-g="starch"]{--c:var(--starch);--o:var(--on-starch)}
+[data-g="dairy"]{--c:var(--dairy);--o:var(--on-dairy)}
+[data-g="protein"]{--c:var(--protein);--o:var(--on-protein)}
+[data-g="oil"]{--c:var(--oil);--o:var(--on-oil)}
+[data-g="treat"]{--c:var(--treat);--o:var(--on-treat)}
+[data-g="accent"]{--c:var(--accent);--o:var(--on-accent)}
+[data-g="ink"]{--c:var(--ink);--o:var(--bg)}
+
+.wrap{max-width:780px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--bg);border-bottom:1px solid var(--line)}
+.topin{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-block:10px}
+.brand{background:none;border:0;padding:0;font-family:var(--display);font-weight:800;font-size:1.3rem;letter-spacing:-.01em}
+.xp{font-weight:700;background:var(--ink);color:var(--bg);border-radius:999px;padding:6px 14px;font-variant-numeric:tabular-nums}
+main.wrap{padding-block:20px 72px}
+
+.hero{display:grid;grid-template-columns:minmax(0,1fr) 130px;gap:16px;align-items:center}
+.kicker{font-size:.8rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.hero h1{font-size:clamp(2.2rem,9vw,3.6rem);font-weight:800;margin:6px 0 10px}
+.hero p{max-width:46ch}
+.hplate{width:100%;height:auto}
+@media(max-width:420px){.hero{grid-template-columns:minmax(0,1fr) 88px}}
+.prog{display:flex;align-items:center;gap:12px;margin:18px 0 22px;font-weight:700}
+.meter{height:10px;background:var(--line);border-radius:99px;overflow:hidden;flex:1}
+.meter i{display:block;height:100%;background:var(--accent);border-radius:99px;transition:width .4s}
+.mlist{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:14px}
+.mcard{display:grid;grid-template-rows:auto 1fr auto;text-align:left;padding:0;border:2px solid var(--ink);border-radius:18px;background:var(--surface);overflow:hidden;min-width:0}
+.pics{display:flex;gap:8px;justify-content:center;align-items:center;padding:16px;font-size:2.2rem;line-height:1.1;background:var(--c);color:var(--o)}
+.mtxt{display:grid;gap:4px;padding:14px 16px 8px;min-width:0}
+.mnum{font-size:.75rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.mtxt strong{font-family:var(--display);font-size:1.35rem;line-height:1.15}
+.st{padding:0 16px 14px;font-weight:700}
+.mcard.done .st{color:var(--good)}
+.link{background:none;border:0;padding:6px 0;margin-top:22px;color:var(--muted);text-decoration:underline;text-underline-offset:3px}
+
+.back{background:none;border:0;padding:8px 0;font-weight:700;color:var(--muted);text-decoration:underline;text-underline-offset:3px;justify-self:start}
+.vhead{display:grid;gap:8px;margin-bottom:18px}
+.vhead h2{font-size:clamp(1.9rem,7vw,2.7rem);font-weight:800}
+.lead{color:var(--muted);max-width:60ch}
+.card{background:var(--surface);border:2px solid var(--line);border-radius:18px;padding:18px;margin-bottom:16px;min-width:0}
+.card h3{font-size:1.35rem;margin-bottom:12px}
+.card p+p{margin-top:10px}
+.note{margin-top:12px;color:var(--muted);font-size:.95rem}
+.row{display:flex;flex-wrap:wrap;gap:8px}
+
+.btn{min-height:48px;padding:10px 18px;border:2px solid var(--ink);border-radius:12px;background:var(--accent);color:var(--on-accent);font-weight:700}
+.btn.ghost{background:transparent;color:var(--ink);border-color:var(--line)}
+.btn:disabled{opacity:.4;cursor:default}
+.pill{background:var(--c);color:var(--o);border:2px solid var(--ink);border-radius:999px;padding:10px 16px;font-weight:700;margin-top:12px}
+.center{text-align:center}
+
+.opts{display:flex;flex-wrap:wrap;gap:8px}
+.opts.col{flex-direction:column}
+.opt{min-height:46px;padding:8px 16px;border:2px solid var(--line);border-radius:12px;background:var(--surface);font-weight:700}
+.opts.col .opt{width:100%;text-align:left}
+.opt:hover:not(:disabled){border-color:var(--ink)}
+.opt.ok{background:var(--good-bg);border-color:var(--good);color:var(--ink)}
+.opt.no{background:var(--bad-bg);border-color:var(--bad);color:var(--ink);text-decoration:line-through}
+.opt.dim{opacity:.45}
+.fb{min-height:1.5em;margin-top:10px;font-weight:700}
+.fb.good{color:var(--good)}
+.fb.bad{color:var(--bad)}
+.q{padding:14px 0;border-top:2px solid var(--line)}
+.q:first-child{border-top:0;padding-top:0}
+.qt{display:flex;gap:12px;align-items:center;margin-bottom:10px}
+.qe{font-size:2.2rem;line-height:1}
+.qt p{font-weight:700;font-size:1.05rem}
+
+.plate{display:grid;grid-template-columns:minmax(0,1fr);gap:16px}
+@media(min-width:640px){.plate{grid-template-columns:minmax(0,320px) minmax(0,1fr);align-items:start}}
+.plate svg{width:100%;max-width:340px;height:auto;margin:0 auto;display:block}
+.slice path{fill:var(--c);stroke:var(--surface);stroke-width:4;cursor:pointer}
+.slice.sel path,.slice:focus-visible path{stroke:var(--ink);stroke-width:6}
+.slice:focus{outline:none}
+.slice text{pointer-events:none}
+.info{border-radius:14px;padding:16px;background:var(--c);color:var(--o);min-height:190px;display:grid;gap:8px;align-content:start}
+.info h4{font-size:1.4rem}
+.info .size{font-weight:700;opacity:.9}
+.info .emo{font-size:2rem;letter-spacing:.2em}
+.info .cnt{font-size:.9rem;font-weight:700;opacity:.85}
+
+.sortc{text-align:center}
+.sortc .meter{margin:0 0 14px}
+.sorte{font-size:5rem;line-height:1.1}
+.fbk{display:grid;gap:8px;margin-top:12px}.fbk>div{padding:10px 12px;border:2px solid var(--line);border-radius:12px;background:var(--bg);font-size:.95rem}.fbk b{display:block;margin-bottom:2px}.ok-t{color:var(--good);font-weight:700}.no-t{color:var(--bad);font-weight:700}.rev{padding:10px 0;border-top:2px solid var(--line)}.rev:first-of-type{border-top:0}
+.sortw{font-family:var(--display);font-size:2.1rem;font-weight:800;margin:28px 0 8px}
+.gbtns{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin-top:16px}
+.gb{background:var(--c);color:var(--o);border:2px solid var(--ink);border-radius:12px;min-height:54px;font-weight:700;padding:8px}
+.gb.no{opacity:.3}
+.gb.ok{outline:4px solid var(--good);outline-offset:2px}
+.result{display:grid;gap:10px;justify-items:center;text-align:center;padding:8px 0}
+.result .big{font-size:4rem;line-height:1}
+.result h3{margin:0}
+
+.tip{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;padding:14px;border:2px solid var(--line);border-radius:16px;background:var(--surface);margin-bottom:10px}
+.tip.done{border-color:var(--good);background:var(--good-bg)}
+.tipe{font-size:2.4rem;line-height:1;display:grid;place-items:center}
+.tips{margin-bottom:10px;font-size:1.1rem}
+.tn{display:inline-grid;place-items:center;width:1.7em;height:1.7em;border-radius:50%;background:var(--ink);color:var(--bg);font-weight:700;font-size:.85rem;margin-right:6px}
+.gap{border-bottom:3px dashed var(--accent);padding:0 4px;font-weight:700;letter-spacing:.12em}
+.gap.filled{border-bottom-color:var(--good);color:var(--good);letter-spacing:0}
+
+.flash{display:grid;place-items:center;align-content:center;gap:8px;min-height:250px;width:100%;text-align:center;padding:20px;background:var(--surface);border:2px solid var(--ink);border-radius:20px}
+.flash .fe{font-size:4.6rem;line-height:1.1}
+.flash .fw{font-family:var(--display);font-weight:800;font-size:2rem}
+.flash .hint{color:var(--muted);font-size:.9rem}
+.flash .def{font-size:1.15rem;max-width:30ch}
+.tag{background:var(--accent);color:var(--on-accent);border-radius:6px;padding:1px 7px;font-size:.8rem;font-weight:700;margin-right:6px}
+.ctl{display:flex;gap:8px;justify-content:space-between;flex-wrap:wrap;margin-top:12px}
+.cnum{align-self:center;font-weight:700;font-variant-numeric:tabular-nums}
+.mem{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.mc{aspect-ratio:1;max-width:100%;border:2px solid var(--ink);border-radius:12px;background:var(--ink);color:var(--bg);display:grid;place-items:center;padding:4px;text-align:center;font-weight:700;min-width:0;overflow-wrap:anywhere;font-size:clamp(.7rem,3.2vw,1rem);line-height:1.15}
+.mc.up{background:var(--surface);color:var(--ink)}
+.mc.done{background:var(--good-bg);border-color:var(--good);color:var(--ink)}
+.mc .me{font-size:clamp(1.6rem,8vw,2.4rem)}
+
+.people{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:10px}
+.pp{display:grid;grid-template-columns:auto minmax(0,1fr);gap:12px;align-items:center;padding:12px;border:2px solid var(--line);border-radius:14px;background:var(--bg)}
+.pp .av{font-size:2.4rem;line-height:1}
+.pp strong{font-family:var(--display);font-size:1.15rem}
+.faiths{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:10px}
+.fcard{padding:14px;border:2px solid var(--line);border-radius:16px;background:var(--bg)}
+.fcard h4{font-size:1.2rem;margin-bottom:6px}
+.read{max-width:60ch}
+.read p+p{margin-top:12px}
+.words b{background:var(--accent);color:var(--on-accent);border-radius:6px;padding:0 6px}
+ol.steps{list-style:none;padding:0;margin:12px 0 0;display:grid;gap:8px;counter-reset:s}
+ol.steps li{counter-increment:s;display:grid;grid-template-columns:2rem minmax(0,1fr);gap:10px;align-items:start}
+ol.steps li::before{content:counter(s);display:grid;place-items:center;width:2rem;height:2rem;border-radius:50%;background:var(--ink);color:var(--bg);font-weight:700}
+.yours{min-height:3rem;margin-bottom:12px}
+
+.fqh{display:flex;justify-content:space-between;font-weight:700;margin-bottom:8px}
+.fqe{font-size:4rem;line-height:1.1;margin:8px 0}
+.fq h3{margin-bottom:14px;font-size:1.35rem}
+.nxt{margin-top:12px}
+.finbox{background:var(--good-bg);border:2px solid var(--good);border-radius:18px;padding:16px;display:grid;gap:10px;justify-items:start;margin-bottom:16px}
+.toast{position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);font-weight:700;padding:8px 18px;border-radius:999px;pointer-events:none;z-index:40}
+
+@media (prefers-reduced-motion:no-preference){
+  @keyframes shake{20%{transform:translateX(-5px)}40%{transform:translateX(5px)}60%{transform:translateX(-3px)}80%{transform:translateX(3px)}}
+  @keyframes bump{50%{transform:scale(1.2)}}
+  @keyframes pop{from{transform:scale(.85);opacity:.4}to{transform:scale(1);opacity:1}}
+  .opt.no,.gb.no{animation:shake .35s}
+  .xp.bump{animation:bump .4s}
+  .sorte,.flash .fe,.fqe{animation:pop .25s}
+  .mcard{transition:transform .15s}
+  .mcard:hover{transform:translateY(-3px)}
+}
+</style>
+
+<header class="top"><div class="wrap topin"><button class="brand" data-go="home">Eatwell Quest</button><div class="xp" id="xp"><span id="xpn">0</span> XP</div></div></header>
+<main class="wrap" id="app">
+  <section class="view" id="v-home">
+    <div class="hero">
+      <div>
+        <h1>Revision exercises for 5th year students</h1>
+      </div>
+      <svg class="hplate" id="hplate" viewBox="0 0 300 300" aria-hidden="true"></svg>
+    </div>
+    <div class="prog"><div class="meter"><i id="hprog" style="width:0%"></i></div><span id="hcount">0 of 7 done</span></div>
+    <div class="mlist" id="missionList"></div>
+    <button class="link" id="reset">Reset my progress</button>
+  </section>
+</main>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+(function(){
+'use strict';
+var $=function(s,r){return (r||document).querySelector(s)};
+var $$=function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s))};
+var shuffle=function(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t}return a};
+var cap=function(s){return s.charAt(0).toUpperCase()+s.slice(1)};
+
+/* ---------- progress ---------- */
+var state={xp:0,done:{}};
+try{var saved=JSON.parse(localStorage.getItem('eq1')||'null');if(saved&&typeof saved==='object'){state.xp=+saved.xp||0;state.done=saved.done||{}}}catch(e){}
+function save(){try{localStorage.setItem('eq1',JSON.stringify(state))}catch(e){}}
+var toastTimer=null;
+function toast(msg){var t=$('#toast');t.textContent=msg;t.hidden=false;clearTimeout(toastTimer);toastTimer=setTimeout(function(){t.hidden=true},1100)}
+function reward(n){
+  state.xp+=n;save();
+  $('#xpn').textContent=state.xp;
+  var x=$('#xp');x.classList.remove('bump');void x.offsetWidth;x.classList.add('bump');
+  toast('+'+n+' XP');
+}
+
+/* ---------- data from the PDF ---------- */
+var G={
+  veg:{n:'Fruit and vegetables',s:'Fruit & veg',size:'About 1/3 of your food',emo:'🥦🍎🥕🍅',
+    txt:'Eat at least 5 portions every day. Fruit and vegetables have Vitamin C and minerals. They help your body fight disease. Potatoes are not in this group. They are starchy.'},
+  starch:{n:'Potatoes, bread, rice, pasta',s:'Starchy',size:'About 1/3 of your food',emo:'🥔🍞🍚🍝',
+    txt:'These foods give you carbohydrates, fibre and Vitamin B. Choose wholegrain bread, rice and pasta.'},
+  dairy:{n:'Dairy and alternatives',s:'Dairy',size:'3 portions a day',emo:'🥛🧀',
+    txt:'Milk, yoghurt and cheese give you protein and calcium. Choose low-fat versions.'},
+  protein:{n:'Beans, pulses, fish, eggs, meat',s:'Protein',size:'Eat less red meat',emo:'🫘🐟🥚🍗',
+    txt:'These foods give you protein, vitamins, iron and zinc. Eat more beans and pulses. Eat 2 portions of fish a week. One is oily fish, like salmon.'},
+  oil:{n:'Oils and spreads',s:'Oils',size:'The smallest group',emo:'🫒',
+    txt:'Use only a little. Choose unsaturated oils, like olive oil. They help to reduce cholesterol in the blood.'},
+  treat:{n:'Foods high in fat, salt and sugar',s:'Eat less often',size:'Outside the plate',emo:'🍬🍫🍪🥤',
+    txt:'Sweets, biscuits, chocolate and sugary drinks are not essential. They have calories but very little nutritional value. Eat them in small amounts.'}
+};
+var ITEMS=[
+  ['🍎','apples','veg'],['🥦','broccoli','veg'],['🍌','bananas','veg'],
+  ['🥔','potatoes','starch','Potatoes are starchy, not vegetables.'],['🍞','bread','starch'],['🍝','pasta','starch'],['🍚','rice','starch'],
+  ['🥛','milk','dairy'],['🧀','cheese','dairy'],
+  ['🐟','fish','protein'],['🥚','eggs','protein'],['🫘','beans','protein'],['🍗','chicken','protein'],
+  ['🫒','olive oil','oil'],
+  ['🍫','chocolate','treat'],['🥤','sugary drink','treat'],
+  ['','wholegrain cereals','starch','Wholegrain cereals are starchy foods with lots of fibre.'],
+  ['','raisins','veg','Raisins are dried grapes. Dried fruit counts as fruit.'],
+  ['','soy beans','protein','Soy beans are pulses. They give you protein.'],
+  ['','lentils','protein','Lentils are pulses. They give you protein and iron.'],
+  ['','celery','veg'],['','parsley','veg','Parsley is a herb. Herbs are in the fruit and vegetables group.'],['','pomegranate','veg'],
+  ['','crisps','treat','Crisps are high in fat and salt.'],
+  ['','oats','starch','Oats are a wholegrain starchy food.'],
+  ['','almonds','protein','Almonds are nuts. Nuts are in the protein group.'],
+  ['','cornmeal','starch','Cornmeal is made from maize. It is a starchy food.']
+];
+var TIPS=[
+  {pre:'Base your ',ans:'meals',post:' on starchy foods.',o:['meals','meat','milk','minerals'],why:'Starchy foods should be about one third of what you eat.'},
+  {pre:'Eat lots of fruit and ',ans:'vegetables',post:'.',o:['vegetables','vitamins','veal','vinegar'],why:'Eat at least 5 portions of fruit and vegetables a day.'},
+  {pre:'Eat more fish – including a ',ans:'portion',post:' of oily fish each week.',o:['portion','protein','pulses','pasta'],why:'Two portions of fish a week; one should be oily, like salmon.'},
+  {pre:'Cut down on saturated ',ans:'fat',post:' and sugar.',o:['fat','fibre','fish','flour'],why:'A diet high in fat and sugar can lead to weight gain and heart disease.'},
+  {pre:'Eat less ',ans:'salt',post:' – no more than 6g a day for adults.',o:['salt','sugar','sauce','snacks'],why:'Sugar is already in tip 4. The 6 g limit is for salt.'},
+  {pre:'Get ',ans:'active',post:' and try to be a healthy weight.',o:['active','alert','anxious','ahead'],why:'“Get active” = do more exercise.'},
+  {pre:'Drink plenty of ',ans:'water',post:'.',o:['water','wine','wheat','weight'],why:'Water, lower-fat milk and sugar-free drinks all count.'},
+  {pre:'Don’t skip ',ans:'breakfast',post:'.',o:['breakfast','bread','butter','beans'],why:'“Skip” = not eat a meal.'}
+];
+var WORDS=[
+  ['🍽️','portion','an amount of food for one person','porzione'],
+  ['🍞','starchy','food with a lot of carbohydrates, like bread and rice','ricco di amido'],
+  ['🌾','wholegrain','made with the whole grain, with more fibre','integrale'],
+  ['🥚','protein','helps your body grow. It is in meat, fish, eggs and beans','proteina'],
+  ['🫘','pulses','beans, peas and lentils','legumi'],
+  ['🐟','oily fish','fish with healthy oil, like salmon or trout','pesce azzurro / pesce grasso'],
+  ['🧈','saturated fat','a fat that is not good in big amounts','grassi saturi'],
+  ['🫒','unsaturated oil','a healthier oil, like olive oil','olio insaturo'],
+  ['🧂','salt','we put it on food. Too much is bad for you','sale'],
+  ['🧀','dairy','milk, yoghurt and cheese','latticini','⚠️ Not “diary” (= agenda)!'],
+  ['🥬','fibre','helps your stomach. It is in wholegrain, fruit and vegetables','fibra'],
+  ['🥵','dehydration','not enough water in the body','disidratazione'],
+  ['🥗','vegetarian','no meat and no fish','vegetariano'],
+  ['🌱','vegan','no animal products at all','vegano'],
+  ['🍲','flexitarian','mostly plants, sometimes meat','flexitariano'],
+  ['🕌','halal','allowed for Muslims','lecito'],
+  ['✡️','kosher','allowed for Jewish people','kasher'],
+  ['🚫','haram','not allowed for Muslims','vietato'],
+  ['🔪','slaughter','to kill an animal for meat','macellare'],
+  ['🔥','calories','the energy in food and drinks','calorie'],
+  ['🩸','cholesterol','a fat in the blood. Too much is bad for the heart','colesterolo'],
+  ['🛡️','antioxidant','a substance that protects the cells in your body','antiossidante'],
+  ['🥜','nuts','almonds, walnuts, hazelnuts...','frutta secca'],
+  ['🍬','sweets','small sugary foods, like candy','caramelle / dolciumi','⚠️ Not “sweet” (dolce)!'],
+  ['🥔','crisps','thin fried slices of potato in a packet','patatine in busta','⚠️ UK: crisps = patatine in busta; chips = patatine fritte'],
+  ['🏭','processed food','food made in a factory, often with sugar, salt and fat','cibo trasformato'],
+  ['🏷️','label','the paper on a product with information about it','etichetta'],
+  ['💊','supplement','a pill or powder with vitamins or minerals','integratore','⚠️ Not “supplemento” (costo extra)!'],
+  ['🥩','raw','not cooked','crudo'],
+  ['🚷','to avoid','to stay away from something','evitare'],
+  ['📉','to lack','to not have enough of something','essere carente di / mancare di'],
+  ['🦷','tooth decay','damage to teeth, often from too much sugar','carie'],
+  ['🥄','intake','the amount of food or drink that you take into your body','assunzione'],
+  ['🍚','staple','a basic food that people eat almost every day','alimento base'],
+  ['🏃','to skip','to not eat a meal','saltare (un pasto)']
+];
+var MISSIONS=[
+  {id:'plate',g:'veg',pics:'🥦🍞🥛',title:'Build the plate',sub:'Explore the Eatwell Guide. Sort 27 foods.',lead:'Tap the plate and read. Then sort the food.'},
+  {id:'tips',g:'starch',pics:'🏃💧🥣',title:'The 8 tips',sub:'Fill the gaps, then say why the tips matter.',lead:'Tap the missing word, then explain why each tip matters.'},
+  {id:'words',g:'dairy',pics:'🧀🫘🧂',title:'Word cards',sub:'Flip 35 words, translate from Italian, pass the Word challenge.',lead:'Learn the words. Translate 18 tricky Italian words. Then answer 12 questions with no pictures.'},
+  {id:'diets',g:'protein',pics:'🥗🌱🍲',title:'Which diet?',sub:'Six people, 21 questions. Some answers are not written.',lead:'Read carefully. Some answers are not written directly: think!'},
+  {id:'faith',g:'oil',pics:'🕌✡️🐄',title:'Faith and food',sub:'Muslim, Jewish, Hindu and Buddhist food rules.',lead:'Different faiths have different food rules. Read, infer and complete.'},
+  {id:'halal',g:'accent',pics:'🕌🥓🚫',title:'Halal, step by step',sub:'The strictest rules for halal meat. 5 tasks.',lead:'Read the three strict rules. Then test yourself and write.'},
+  {id:'final',g:'ink',pics:'🏆🥦🐟',title:'Final challenge',sub:'10 short written answers. Score 7 to pass.',lead:'Write short answers. We check vocabulary, grammar and content.'}
+];
+
+/* ---------- shared helpers ---------- */
+function arc(a0,a1,r){
+  var x0=150+r*Math.cos(a0),y0=150+r*Math.sin(a0),x1=150+r*Math.cos(a1),y1=150+r*Math.sin(a1);
+  return 'M150 150 L'+x0.toFixed(1)+' '+y0.toFixed(1)+' A'+r+' '+r+' 0 '+((a1-a0)>Math.PI?1:0)+' 1 '+x1.toFixed(1)+' '+y1.toFixed(1)+' Z';
+}
+var SL=[['starch',35],['oil',6],['dairy',12],['protein',12],['veg',35]];
+var EMO={starch:'🍞',oil:'🫒',dairy:'🥛',protein:'🐟',veg:'🥦'};
+function plateMarkup(label){
+  var a=-Math.PI/2,out='';
+  SL.forEach(function(s){
+    var g=s[0],p=s[1],a1=a+p/100*2*Math.PI,mid=(a+a1)/2,r=g==='oil'?0.8:0.62,fs=p>=30?46:(g==='oil'?20:30);
+    out+='<g class="slice" data-g="'+g+'"'+(label?' data-slice="'+g+'" tabindex="0" role="button" aria-label="'+G[g].n+'"':'')+'><path d="'+arc(a,a1,128)+'"/>'+
+      (label?'<text x="'+(150+128*r*Math.cos(mid)).toFixed(1)+'" y="'+(150+128*r*Math.sin(mid)).toFixed(1)+'" font-size="'+fs+'" text-anchor="middle" dominant-baseline="central">'+EMO[g]+'</text>':'')+'</g>';
+    a=a1;
+  });
+  return out;
+}
+function makeQuiz(box,items,onDone){
+  var right=0;
+  var sets=items.map(function(it){return it.fixed?it.o.slice():shuffle(it.o)});
+  box.innerHTML=items.map(function(it,n){
+    return '<div class="q" data-n="'+n+'"><div class="qt">'+(it.e?'<span class="qe" aria-hidden="true">'+it.e+'</span>':'')+'<p>'+it.q+'</p></div><div class="opts'+(it.col?' col':'')+'">'+
+      sets[n].map(function(o){return '<button class="opt" data-o="'+o+'">'+o+'</button>'}).join('')+'</div><p class="fb" aria-live="polite"></p></div>';
+  }).join('');
+  box.onclick=function(e){
+    var b=e.target.closest('.opt');if(!b||b.disabled)return;
+    var q=b.closest('.q'),it=items[+q.dataset.n],fb=$('.fb',q);
+    if(b.dataset.o===it.a){
+      $$('.opt',q).forEach(function(x){x.disabled=true});
+      b.classList.add('ok');fb.textContent=it.fb||'Correct!';fb.className='fb good';
+      reward(q.dataset.w?3:10);right++;
+      if(right===items.length&&onDone)onDone();
+    }else{
+      b.disabled=true;b.classList.add('no');q.dataset.w=1;fb.textContent='Try again.';fb.className='fb bad';
+    }
+  };
+}
+function complete(id){
+  var first=!state.done[id];
+  if(first){state.done[id]=1;save();reward(20);refreshHome()}
+  var i=MISSIONS.findIndex(function(m){return m.id===id}),nx=MISSIONS[i+1];
+  var all=MISSIONS.every(function(m){return state.done[m.id]});
+  var fin=$('#v-'+id+' .fin');
+  fin.innerHTML='<div class="finbox"><strong>Mission complete!</strong><span>'+(first?'+20 XP bonus. ':'Well done again. ')+(all?'You finished all 7 missions!':'')+'</span><div class="row">'+
+    (nx?'<button class="btn" data-go="'+nx.id+'">Next: '+nx.title+'</button>':'')+'<button class="btn ghost" data-go="home">All missions</button></div></div>';
+  if(fin.scrollIntoView)fin.scrollIntoView({block:'nearest'});
+}
+
+/* ---------- mission 1: plate ---------- */
+function initPlate(root){
+  root.innerHTML='<div class="card"><h3>The Eatwell Guide</h3><div class="plate"><div>'+
+    '<svg viewBox="0 0 300 300" role="group" aria-label="The Eatwell plate"><circle cx="150" cy="150" r="144" fill="var(--surface)" stroke="var(--accent)" stroke-width="6"/>'+plateMarkup(true)+'</svg>'+
+    '<div class="center"><button class="pill" data-g="treat" data-slice="treat">🍫 Outside the plate</button></div></div>'+
+    '<div class="info" id="pinfo" data-g="ink"><h4>Tap a part of the plate</h4><p>Read all 6 parts to win 20 XP.</p></div></div>'+
+    '<p class="note">💧 Drink 6–8 glasses of water a day. Per day: 2000 kcal or 2500 kcal (all food and all drinks).</p></div>'+
+    '<div class="card"><h3>Sort the food</h3><div id="sortBox"></div></div>';
+  var viewed={},nView=0,paid=false;
+  function pick(g){
+    var d=G[g],info=$('#pinfo');
+    if(!viewed[g]){viewed[g]=1;nView++}
+    info.setAttribute('data-g',g);
+    info.innerHTML='<h4>'+d.n+'</h4><p class="size">'+d.size+'</p><p>'+d.txt+'</p><p class="emo" aria-hidden="true">'+d.emo+'</p><p class="cnt">Read '+nView+' of 6</p>';
+    $$('.slice',root).forEach(function(s){s.classList.toggle('sel',s.dataset.slice===g)});
+    if(nView===6&&!paid){paid=true;reward(20)}
+  }
+  root.addEventListener('click',function(e){var s=e.target.closest('[data-slice]');if(s)pick(s.dataset.slice)});
+  root.addEventListener('keydown',function(e){
+    if(e.key!=='Enter'&&e.key!==' ')return;
+    var s=e.target.closest&&e.target.closest('.slice[data-slice]');
+    if(s){e.preventDefault();pick(s.dataset.slice)}
+  });
+
+  var q,i,first,wrong,locked,box=$('#sortBox',root);
+  function start(){q=shuffle(ITEMS);i=0;first=0;wrong=false;locked=false;render()}
+  function render(){
+    if(i>=q.length){
+      box.innerHTML='<div class="result"><div class="big" aria-hidden="true">'+(first>=Math.ceil(q.length*0.75)?'🏆':'👍')+'</div><h3>'+first+' of '+q.length+' right on the first try</h3><p>'+(first>=Math.ceil(q.length*0.75)?'Great job! You know the plate.':'Good work. Play again to get a higher score.')+'</p><button class="btn" data-again>Play again</button></div>';
+      complete('plate');return;
+    }
+    var it=q[i];
+    box.innerHTML='<div class="sortc"><div class="meter"><i style="width:'+(i/q.length*100)+'%"></i></div><div class="sortw">'+it[1]+'</div><p class="note">Which part of the plate? ('+(i+1)+' / '+q.length+')</p>'+
+      '<div class="gbtns">'+['veg','starch','dairy','protein','oil','treat'].map(function(g){return '<button class="gb" data-g="'+g+'" data-pick="'+g+'">'+G[g].s+'</button>'}).join('')+'</div><p class="fb" aria-live="polite"></p></div>';
+  }
+  box.addEventListener('click',function(e){
+    if(e.target.closest('[data-again]')){start();return}
+    var b=e.target.closest('[data-pick]');if(!b||b.disabled||locked)return;
+    var it=q[i],fb=$('.fb',box),g=b.dataset.pick;
+    if(g===it[2]){
+      locked=true;b.classList.add('ok');
+      fb.textContent='Yes! '+(it[3]||cap(it[1])+': '+G[g].n+'.');fb.className='fb good';
+      if(!wrong)first++;
+      reward(wrong?3:10);
+      setTimeout(function(){i++;wrong=false;locked=false;render()},1200);
+    }else{
+      wrong=true;b.disabled=true;b.classList.add('no');fb.textContent='Not this one. Try again.';fb.className='fb bad';
+    }
+  });
+  start();
+}
+
+function initTips(root){
+  var done=0,qd=0;
+  function chk(){if(done===TIPS.length&&qd)complete('tips')}
+  root.innerHTML='<div class="card"><h3>1 · Complete the 8 tips</h3><p class="note" style="margin:0 0 12px">The options all start with the same letter. Think about the meaning.</p><div id="tg">'+TIPS.map(function(t,n){
+    return '<div class="tip" data-n="'+n+'"><div><p class="tips"><span class="tn">'+(n+1)+'</span> '+t.pre+'<span class="gap">'+t.ans.charAt(0)+new Array(t.ans.length).join('_')+'</span>'+t.post+'</p><div class="opts">'+
+      shuffle(t.o).map(function(o){return '<button class="opt" data-o="'+o+'">'+o+'</button>'}).join('')+'</div></div></div>';
+  }).join('')+'</div></div><div class="card"><h3>2 · Why does it matter?</h3><div id="tq"></div></div><div class="fin"></div>';
+  $('#tg',root).onclick=function(e){
+    var b=e.target.closest('.opt');if(!b||b.disabled)return;
+    var tip=b.closest('.tip'),t=TIPS[+tip.dataset.n];
+    if(b.dataset.o===t.ans){
+      var gp=$('.gap',tip);gp.textContent=t.ans;gp.classList.add('filled');
+      $$('.opt',tip).forEach(function(x){x.disabled=true;if(x!==b)x.classList.add('dim')});
+      b.classList.add('ok');tip.classList.add('done');
+      $('.opts',tip).insertAdjacentHTML('afterend','<p class="note">'+t.why+'</p>');
+      reward(tip.dataset.w?3:10);done++;chk();
+    }else{b.disabled=true;b.classList.add('no');tip.dataset.w=1}
+  };
+  makeQuiz($('#tq',root),[
+    {q:'Why does the Eatwell Guide say “choose wholegrain”?',o:['They have more fibre.','They have less carbohydrate.','They have more saturated fat.','They are cheaper than white bread.'],a:'They have more fibre.',col:1},
+    {q:'Which problems can a healthy diet help to reduce?',o:['Diabetes, heart disease, obesity and tooth decay','Dehydration, anaemia and allergies','Vitamin B12 deficiency and food poisoning','Stress, flu and headaches'],a:'Diabetes, heart disease, obesity and tooth decay',col:1},
+    {q:'Why should we cut down on foods high in fat and sugar?',o:['They have many calories but little nutritional value.','They have no energy at all.','They contain too much fibre.','They are always expensive.'],a:'They have many calories but little nutritional value.',col:1},
+    {q:'Why is water important for people who play sport?',o:['It helps to prevent dehydration.','It gives them protein.','It replaces carbohydrates.','It lowers cholesterol.'],a:'It helps to prevent dehydration.',col:1},
+    {q:'“Eat at least 5 portions” means…',o:['5 or more portions','exactly 5 portions','no more than 5 portions','5 portions a week'],a:'5 or more portions',col:1},
+    {q:'Which tip gives a maximum limit?',o:['Eat less salt – no more than 6g a day.','Drink plenty of water.','Eat lots of fruit and vegetables.','Don’t skip breakfast.'],a:'Eat less salt – no more than 6g a day.',col:1}
+  ],function(){qd=1;chk()});
+}
+
+/* ---------- mission 3: words ---------- */
+function initWords(root){
+  root.innerHTML='<div class="card"><h3>Flashcards</h3><button class="flash" id="fc" aria-live="polite"></button><div class="ctl"><button class="btn ghost" id="fprev">← Back</button><span class="cnum" id="fnum"></span><button class="btn" id="fnext">Next →</button></div></div>'+
+    '<div class="card"><h3>Translate it</h3><p class="note" style="margin:0 0 12px">Write the English word or phrase. Careful: some Italian words have English “false friends”!</p><div id="tr"></div></div>'+
+    '<div class="card"><h3>Word challenge</h3><p class="note" style="margin:0 0 12px">No pictures now. Read carefully!</p><div id="wq"></div></div>';
+  var ci=0,back=false,got={},wqDone=false,trDone=false;
+  function wcheck(){if(wqDone&&trDone)complete('words')}
+  function card(){
+    var w=WORDS[ci];
+    $('#fc').innerHTML=back?
+      '<span class="fw">'+w[1]+'</span><span class="def">'+w[2]+'</span><span><span class="tag">IT</span>'+w[3]+'</span>'+(w[4]?'<span class="hint">'+w[4]+'</span>':''):
+      '<span class="fe" aria-hidden="true">'+w[0]+'</span><span class="fw">'+w[1]+'</span><span class="hint">Tap to see the meaning</span>';
+    $('#fnum').textContent=(ci+1)+' / '+WORDS.length;
+  }
+  $('#fc').onclick=function(){
+    back=!back;card();
+    if(back&&!got[ci]){got[ci]=1;reward(2)}
+  };
+  $('#fnext').onclick=function(){ci=(ci+1)%WORDS.length;back=false;card()};
+  $('#fprev').onclick=function(){ci=(ci-1+WORDS.length)%WORDS.length;back=false;card()};
+  card();
+
+  makeQuiz($('#wq',root),[
+    {q:'“The amount of food and drink that you take into your body.”',o:['intake','portion','label','supplement'],a:'intake'},
+    {q:'“A fat in the blood. Too much is bad for the heart.”',o:['cholesterol','carbohydrate','calcium','calorie'],a:'cholesterol'},
+    {q:'“To not have enough of something, for example Vitamin B12.”',o:['to lack','to avoid','to skip','to lose'],a:'to lack'},
+    {q:'Too much sugar can cause ___ decay.',o:['tooth','teeth','tooths','mouth'],a:'tooth'},
+    {q:'In the UK, “crisps” are…',o:['thin fried potato slices in a packet','long fried potatoes served hot','sweet biscuits','dried fruit'],a:'thin fried potato slices in a packet',fb:'Yes. Hot fried potatoes are “chips”.'},
+    {q:'In this unit, a “supplement” is…',o:['a pill with vitamins or minerals','an extra cost on a bill','a second course at dinner','a diet plan for athletes'],a:'a pill with vitamins or minerals',fb:'Yes: “integratore”, not “supplemento”.'},
+    {q:'Food made in a factory, often with a lot of salt, sugar and fat, is ___ food.',o:['processed','preserved','prepared','produced'],a:'processed'},
+    {q:'Vegans ___ all animal products.',o:['avoid','miss','lack','skip'],a:'avoid'},
+    {q:'Rice and bread are ___ foods for many people: they eat them almost every day.',o:['staple','starchy','supplement','snack'],a:'staple',fb:'Yes. “Staple” = basic food. Rice is also starchy, but only one word means “basic”.'},
+    {q:'Which is the odd one out?',o:['oats','lentils','chickpeas','beans'],a:'oats',fb:'Yes. Oats are a cereal. The others are pulses.'},
+    {q:'Which one is a unit of energy?',o:['calorie','gram','portion','litre'],a:'calorie'},
+    {q:'Antioxidants ___ the cells in our body.',o:['protect','prevent','produce','provide'],a:'protect'}
+  ],function(){wqDone=true;wcheck()});
+  var TR=[
+    ['latticini','gruppo alimentare',/^(dairy|dairy products?|dairy foods?)$/,'dairy (products)',/^diary$/,'“Diary” means agenda! Milk and cheese are “dairy”.'],
+    ['legumi','fagioli, lenticchie, ceci',/^(pulses|legumes)$/,'pulses'],
+    ['integrale','pane, riso, pasta',/^(whole ?grain|whole ?meal)$/,'wholegrain'],
+    ['colesterolo','nel sangue',/^cholesterol$/,'cholesterol',/^colesterol/,'Check the spelling: ch-o-l-e-s-t-e-r-o-l.'],
+    ['caramelle','dolciumi',/^(sweets|candy|candies)$/,'sweets',/^caramels?$/,'“Caramel” is only the brown sugar sauce!'],
+    ['patatine in busta','da sgranocchiare (UK)',/^(potato )?crisps$/,'crisps'],
+    ['integratore','es. vitamina B12',/^(food |dietary )?supplements?$/,'supplement',/^integrator/,'No “integrator”: the English word is “supplement”.'],
+    ['frutta secca','mandorle, noci',/^nuts$/,'nuts',/^(dried|dry) fruits?$/,'“Dried fruit” is frutta essiccata (raisins). Frutta secca = “nuts”.'],
+    ['macellare','un animale',/^slaughter$/,'to slaughter',/^butcher$/,'“Butcher” is the person: macellaio.'],
+    ['assunzione','di cibo e bevande',/^intake$/,'intake',/^assumption$/,'“Assumption” means supposizione!'],
+    ['cibo trasformato','industriale',/^processed foods?$/,'processed food',/^(transformed|trasformed) foods?$/,'We say “processed food”, not “transformed”.'],
+    ['alimenti amidacei','pane, pasta, patate',/^starchy (foods?|carbohydrates?)$/,'starchy food',/^(amidaceous|starch food|starched foods?)$/,'The adjective is “starchy”: starchy food.'],
+    ['pesce azzurro','salmone, sgombro, trota',/^oily fish$/,'oily fish',/^(blue fish|fat fish|oil fish|greasy fish)$/,'We say “oily fish”.'],
+    ['permesso (dalla religione)','halal',/^(allowed|permitted)$/,'allowed',/^permission$/,'“Permission” means autorizzazione. The adjective is “allowed”.'],
+    ['vietato (dalla religione)','haram',/^(not allowed|forbidden|prohibited)$/,'not allowed',/^(no allowed|not permitted)$/,'Almost! Use “not allowed” (or “forbidden”).'],
+    ['grassi insaturi','olio d’oliva',/^unsaturated (fats?|oils?)$/,'unsaturated fat',/^(insaturated|unsaturate|not saturated) (fats?|oils?)$/,'The word is “unsaturated”.'],
+    ['antiossidante','protegge le cellule',/^antioxidants?$/,'antioxidant',/^antioxidante$/,'No final -e in English: antioxidant.'],
+    ['mancare (di vitamina B12)','non averne abbastanza',/^(lack|be lacking in|be lacking)$/,'to lack',/^miss$/,'“Miss” is for people or trains. For a nutrient we say “lack”.']
+  ];
+  var trGot=0;
+  $('#tr',root).innerHTML=TR.map(function(t,n){
+    return '<div class="q" data-n="'+n+'" data-t="0"><div class="qt"><p>'+t[0]+' <span class="note">('+t[1]+')</span></p></div><div class="row"><input type="text" class="ti" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="English for '+t[0]+'" style="flex:1;min-width:140px;font:inherit;padding:10px;border:2px solid var(--line);border-radius:12px;background:var(--bg);color:var(--ink)"><button class="btn" data-ck>Check</button></div><p class="fb" aria-live="polite"></p></div>';
+  }).join('');
+  function trEnd(q,ok){
+    $('.ti',q).disabled=true;$$('button',q).forEach(function(b){b.remove()});
+    trGot++;if(trGot===TR.length){trDone=true;wcheck()}
+  }
+  $('#tr',root).onclick=function(e){
+    var b=e.target.closest('[data-ck],[data-show]');if(!b)return;
+    var q=b.closest('.q'),t=TR[+q.dataset.n],fb=$('.fb',q);
+    if(b.hasAttribute('data-show')){fb.textContent='Answer: '+t[3];fb.className='fb bad';trEnd(q);return}
+    var v=$('.ti',q).value.toLowerCase().replace(/[\u2018\u2019]/g,"'").replace(/\s+/g,' ').trim().replace(/^to /,'');
+    if(!v){fb.textContent='Write your answer first.';fb.className='fb bad';return}
+    if(t[2].test(v)){
+      fb.textContent='Correct! '+t[3];fb.className='fb good';reward(q.dataset.w?3:10);trEnd(q);
+    }else{
+      q.dataset.w=(+q.dataset.w||0)+1;
+      fb.textContent=(t[4]&&t[4].test(v))?t[5]:'Not quite. Try again.';fb.className='fb bad';
+      if(+q.dataset.w>=2&&!$('[data-show]',q))$('.row',q).insertAdjacentHTML('beforeend','<button class="btn ghost" data-show>Show answer</button>');
+    }
+  };
+}
+
+/* ---------- mission 4: diets ---------- */
+function initDiets(root){
+  var d={a:0,b:0,c:0};
+  function check(){if(d.a&&d.b&&d.c)complete('diets')}
+  var P=[
+   ['🌱','Mia (16) stopped eating animal products two years ago. At school she often has a bean curry and, every morning, she takes a supplement because her diet can lack Vitamin B12. “Some friends think it is difficult,” she says, “but I eat fruit, nuts, vegetables and cereals, raw or cooked.”'],
+   ['🍲','Jack (15) is not a vegetarian: he has meat once or twice a week. The rest of the time he fills his plate with vegetables, beans and nuts. He tries to avoid processed food because it makes him feel tired.'],
+   ['🕌','Aisha (16) only eats meat that is halal. The canteen cooks it on Tuesdays; on the other days she chooses fish or a dish without meat. She never eats pork and always reads the label to check for gelatine.'],
+   ['⚽','Dan (17) trains five times a week. Before a match he eats pasta or rice to get energy, and he drinks water all the time, even when he isn’t thirsty, so his body does not run out of water.'],
+   ['🥚','Leo (15) eats eggs, cheese and yoghurt, but he has never eaten meat or fish. His mum says: “We just have to combine foods carefully, so he gets all the nutrients he needs.”'],
+   ['👵','Rosa, Leo’s grandmother, is 94 and lives in Sardinia. She eats mostly whole, unprocessed food: beans, vegetables, nuts and wholegrain bread. Scientists study her area because so many people live to 100.']
+  ];
+  root.innerHTML='<div class="card read"><h3>Reading: lunch at Green Valley School</h3><div class="people">'+P.map(function(p){return '<div class="pp"><span class="av" aria-hidden="true">'+p[0]+'</span><p>'+p[1]+'</p></div>'}).join('')+'</div></div>'+
+    '<div class="card"><h3>1 · Read and choose</h3><div id="q1"></div></div>'+
+    '<div class="card"><h3>2 · True, false or not stated?</h3><p class="note" style="margin:0 0 10px">“Not stated” means the text does not say.</p><div id="q2"></div></div>'+
+    '<div class="card"><h3>3 · Name the diet</h3><div id="q3"></div></div><div class="fin"></div>';
+  makeQuiz($('#q1',root),[
+    {q:'Why does Mia take a supplement every morning?',o:['Her diet may not give her enough Vitamin B12.','She needs more calcium for her bones.','She plays sport every day.','She doesn’t like vegetables.'],a:'Her diet may not give her enough Vitamin B12.',fb:'Yes. Diets without animal products can lack Vitamin B12.',col:1},
+    {q:'What is the main difference between Jack and Leo?',o:['Jack sometimes eats meat; Leo never does.','Jack eats eggs; Leo doesn’t.','Jack is vegan; Leo is vegetarian.','Jack plays sport; Leo doesn’t.'],a:'Jack sometimes eats meat; Leo never does.',col:1},
+    {q:'It is Wednesday. What is Aisha’s most likely lunch?',o:['Fish with vegetables','Halal chicken with rice','Beef lasagne','A ham and cheese toastie'],a:'Fish with vegetables',fb:'Yes. Halal meat is only on Tuesdays.',col:1},
+    {q:'Dan drinks water “even when he isn’t thirsty”. Why?',o:['To avoid dehydration','To lose weight','To get more protein','To replace his dinner'],a:'To avoid dehydration',col:1},
+    {q:'Which TWO teenagers eat no meat at all?',o:['Mia and Leo','Jack and Leo','Mia and Aisha','Leo and Dan'],a:'Mia and Leo',fb:'Yes. Jack and Aisha eat some meat. We don’t know about Dan.',col:1},
+    {q:'What do Rosa’s meals and Jack’s meals have in common?',o:['Beans, vegetables and nuts, with little processed food','Both are vegan','Both include halal meat','Both train five times a week'],a:'Beans, vegetables and nuts, with little processed food',fb:'Yes. You had to compare two texts.',col:1},
+    {q:'“Combine foods carefully” means…',o:['mix different foods to get all the nutrients','cook all the foods together','eat only one food at a time','avoid dairy products'],a:'mix different foods to get all the nutrients',col:1},
+    {q:'Why do scientists study Rosa’s area?',o:['Many people there live a very long time.','Many people there are vegan.','It has the best fish in Italy.','Nobody there eats sweets.'],a:'Many people there live a very long time.',col:1}
+  ],function(){d.a=1;check()});
+  var T=['True','False','Not stated'];
+  makeQuiz($('#q2',root),[
+    {q:'Mia eats fish on Fridays.',o:T,fixed:1,a:'False',fb:'False. Fish is an animal product.'},
+    {q:'Aisha eats halal meat every day.',o:T,fixed:1,a:'False',fb:'False. Only on Tuesdays.'},
+    {q:'Dan eats a lot of meat before a match.',o:T,fixed:1,a:'Not stated',fb:'Not stated. We only know he eats pasta or rice.'},
+    {q:'Rosa is older than 90.',o:T,fixed:1,a:'True',fb:'True. She is 94.'},
+    {q:'Leo’s diet includes dairy products.',o:T,fixed:1,a:'True'},
+    {q:'Jack’s mother is a vegetarian.',o:T,fixed:1,a:'Not stated',fb:'Not stated. The text says nothing about her.'},
+    {q:'Mia only eats raw food.',o:T,fixed:1,a:'False',fb:'False. She eats it “raw or cooked”.'},
+    {q:'Processed food makes Jack tired.',o:T,fixed:1,a:'True',fb:'True. At least, that is what he feels.'}
+  ],function(){d.b=1;check()});
+  var D=['Vegan','Vegetarian','Flexitarian','Sports diet','Blue Zone diet','Religious diet'];
+  makeQuiz($('#q3',root),[
+    {q:'“I eat grains, pulses, fruit, nuts, eggs and dairy. I just don’t eat animals.”',o:D,a:'Vegetarian',fb:'Yes. Eggs and dairy are OK in a vegetarian diet.'},
+    {q:'“Mostly plants, but I have a steak on special occasions.”',o:D,a:'Flexitarian'},
+    {q:'“Nothing from animals at all, and I check my B12 levels.”',o:D,a:'Vegan'},
+    {q:'“Pasta the night before, plenty of fluids during the match.”',o:D,a:'Sports diet'},
+    {q:'“In my village many people reach 100. We eat whole food and very few sweets.”',o:D,a:'Blue Zone diet'},
+    {q:'“I never eat pork, and my meat comes from a halal butcher.”',o:D,a:'Religious diet'},
+    {q:'“I choose fresh, nutrient-dense food and avoid ready meals, but I still eat chicken now and then.”',o:D,a:'Flexitarian',fb:'Yes. Mostly plants and whole food, with a little meat.'}
+  ],function(){d.c=1;check()});
+}
+
+/* ---------- mission 5: faith ---------- */
+function initFaith(root){
+  var d={a:0,b:0};function chk(){if(d.a&&d.b)complete('faith')}
+  root.innerHTML='<div class="card"><h3>Reading: food rules</h3><div class="faiths">'+
+    '<div class="fcard"><h4>🕌 Muslims</h4><p>Muslims follow strict food laws. “Halal” means allowed: meat must come from animals killed in a way that lets the blood drain away.</p></div>'+
+    '<div class="fcard"><h4>✡️ Jewish people</h4><p>Jewish people eat “kosher” food, prepared according to Jewish law. Meat must be free of blood before cooking. Fish and meat, and milk and meat, are never cooked or served together. Milk products are usually eaten at breakfast only.</p></div>'+
+    '<div class="fcard"><h4>🐄 Hindus</h4><p>Hindus believe the cow is sacred and don’t eat beef. They tend to follow a vegetarian diet and avoid products of animal origin, both meat and fish, because they see all life as sacred.</p></div>'+
+    '<div class="fcard"><h4>☸️ Buddhists</h4><p>Buddhists are allowed to eat fish and meat, but their cuisine is mainly vegetarian or vegan. The principle of ahimsa (non-violence) says no living being should be killed. In some cases this applies even to roots, like carrots and potatoes.</p></div>'+
+    '</div></div><div class="card"><h3>1 · Who says it?</h3><p class="note" style="margin:0 0 10px">Think about the rule behind each sentence.</p><div id="fq"></div></div>'+
+    '<div class="card"><h3>2 · Complete the rule</h3><div id="fr"></div></div><div class="fin"></div>';
+  var R=['Muslim','Jewish','Hindu','Buddhist'];
+  makeQuiz($('#fq',root),[
+    {q:'“We’re having chicken for dinner, but please, no cream sauce on it.”',o:R,a:'Jewish',fb:'Yes. Milk and meat are never served together.'},
+    {q:'“We don’t eat beef, and many of us also avoid fish, because all life is sacred.”',o:R,a:'Hindu',fb:'Yes. Hindus tend to avoid meat and fish.'},
+    {q:'“Sometimes I even worry about the carrots and potatoes that we pull out of the ground.”',o:R,a:'Buddhist',fb:'Yes. For some Buddhists, ahimsa includes roots.'},
+    {q:'“The butcher killed the animal so that the blood could drain away. The label says it is allowed.”',o:R,a:'Muslim',fb:'Yes. “Allowed” = halal. (Jewish law also needs the meat free of blood, but the word is kosher.)'},
+    {q:'“Milk products? Only at breakfast, please, and never in the same meal as meat.”',o:R,a:'Jewish',fb:'Yes. Milk products are usually eaten at breakfast only.'},
+    {q:'“I can eat meat and fish, but I choose vegetarian food because I don’t believe in violence.”',o:R,a:'Buddhist',fb:'Yes. Buddhists are allowed to eat meat, but many choose not to.'}
+  ],function(){d.a=1;chk()});
+  makeQuiz($('#fr',root),[
+    {q:'“Halal” means ___.',o:['allowed','clean','forbidden','holy'],a:'allowed',fb:'Yes. “Forbidden” is haram.'},
+    {q:'Kosher meat must be completely free of ___ before cooking.',o:['blood','fat','salt','water'],a:'blood'},
+    {q:'Ahimsa is the principle of ___.',o:['non-violence','non-vegetarian food','fasting','purity'],a:'non-violence'},
+    {q:'Hindus tend to avoid products of ___ origin.',o:['animal','plant','foreign','organic'],a:'animal',fb:'Yes: “of animal origin” = coming from animals, like meat and fish.'},
+    {q:'Which sentence is true?',o:['Buddhists are allowed to eat meat, but many choose not to.','Buddhists are not allowed to eat any meat.','All Buddhists are vegan.','Buddhists only eat roots.'],a:'Buddhists are allowed to eat meat, but many choose not to.',col:1}
+  ],function(){d.b=1;chk()});
+}
+
+/* ---------- mission 6: halal ---------- */
+var STEPS=[
+  'The animal is healthy and calm. It has water to drink.',
+  'A practising Muslim adult says “Bismillah” aloud for this animal.',
+  'He makes one fast cut by hand with a very sharp knife.',
+  'The blood drains away. Now the meat is halal.'
+];
+function initHalal(root){
+  var f={tf:0,sd:0,md:0,ord:0},bonus=false;
+  function check(){if(f.tf&&f.sd&&f.md&&f.ord)complete('halal')}
+  root.innerHTML='<div class="card read"><h3>Reading: halal food</h3>'+
+    '<p class="words"><b>Halal</b> is an Arabic word. It means “allowed”. <b>Haram</b> means “not allowed”.</p>'+
+    '<p>Muslims do not eat <b>pork</b>. They believe God says pork is haram. Muslims also do not drink alcohol.</p>'+
+    '<p>Check the label! Gelatine and lard can come from pigs.</p>'+
+    '<h3 style="margin-top:18px">How does meat become halal?</h3><ol class="steps">'+STEPS.map(function(s){return '<li>'+s+'</li>'}).join('')+'</ol></div>'+
+    '<div class="card"><h3>The strictest rules</h3><p class="note" style="margin:0 0 12px">In big factories, halal meat is often made in a quicker way. The strictest standards say three things.</p><div class="faiths">'+
+    '<div class="fcard"><h4>🙏 1 · One prayer for every animal</h4><p>In standard production a machine can play a recording of the prayer again and again. Or the worker says “Bismillah” (“In the name of God”) once at the start of the shift for all the animals on the conveyor belt.</p><p style="margin-top:8px"><b>Strict rule:</b> the Muslim worker must say the prayer (the <i>Tasmiyah</i>) aloud for every single animal, at the moment of the cut. If he is distracted or skips one animal, the meat of that animal becomes haram.</p></div>'+
+    '<div class="fcard"><h4>✋ 2 · Hand cut only</h4><p>Big plants often use rotating blades to cut the throats of hundreds of birds or sheep every minute.</p><p style="margin-top:8px"><b>Strict rule:</b> the cut must be made by a human, by hand: one clean movement forward and back. Physical contact means the act is intentional, ethical and respectful. It is not a cold, mechanical process.</p></div>'+
+    '<div class="fcard"><h4>👤 3 · Who can do the cut?</h4><p>Not just anyone. In the strictest standards the slaughterer must be:</p><ul style="margin:6px 0 0;padding-left:20px"><li>a practising Muslim</li><li>mentally sane</li><li>an adult</li></ul></div>'+
+    '</div><p class="note">Not all halal certifiers agree. Some accept a recorded prayer or machines. These are the strictest rules.</p></div>'+
+    '<div class="card"><h3>1 · True or false?</h3><div id="tf"></div></div>'+
+    '<div class="card"><h3>2 · Standard or strict?</h3><p class="note" style="margin:0 0 10px">Which method is it?</p><div id="sd"></div></div>'+
+    '<div class="card"><h3>3 · must, mustn’t, can, can’t</h3><div id="md"></div></div>'+
+    '<div class="card"><h3>4 · Put the steps in order</h3><div class="yours" id="yours"></div><div class="opts col" id="ord"></div><p class="fb" id="ofb" aria-live="polite"></p></div>'+
+    '<div class="card"><h3>Bonus: explain it (+15 XP)</h3><p class="note" style="margin:0 0 10px">Write 3 or 4 sentences: how is strict halal slaughter different from standard production?</p>'+
+    '<textarea id="wr" rows="5" style="width:100%;font:inherit;padding:10px;border:2px solid var(--line);border-radius:12px;background:var(--bg);color:var(--ink)"></textarea>'+
+    '<p class="note">Tick what you wrote (at least 3):</p>'+
+    ['the prayer for every animal','the cut by hand','who can do the cut','must / can’t'].map(function(t){return '<label style="display:flex;gap:8px;align-items:center;margin:4px 0"><input type="checkbox" class="ck"> '+t+'</label>'}).join('')+
+    '<div class="row" style="margin-top:12px"><button class="btn" id="wdone">Check my text</button></div><p class="fb" id="wfb" aria-live="polite"></p></div><div class="fin"></div>';
+  var TF=['True','False'],SS=['Standard','Strict halal'],MD=['must','mustn’t','can','can’t'];
+  makeQuiz($('#tf',root),[
+    {e:'🕌',q:'Halal means “allowed”. Haram means “not allowed”.',o:TF,fixed:1,a:'True'},
+    {e:'🙏',q:'Under the strictest rules, one prayer at the start of the shift is enough for all the animals.',o:TF,fixed:1,a:'False',fb:'No. The prayer is for every single animal.'},
+    {e:'🐑',q:'If the worker skips the prayer for one animal, only that animal’s meat becomes haram.',o:TF,fixed:1,a:'True'},
+    {e:'⚙️',q:'Rotating blades are allowed in strict halal slaughter.',o:TF,fixed:1,a:'False',fb:'No. The cut must be made by a human hand.'},
+    {e:'👤',q:'Any adult can do the cut.',o:TF,fixed:1,a:'False',fb:'No. He must be a practising Muslim, sane and an adult.'},
+    {e:'🏷️',q:'Gelatine can be a problem for Muslims.',o:TF,fixed:1,a:'True',fb:'Yes. It can come from pigs.'}
+  ],function(){f.tf=1;check()});
+  makeQuiz($('#sd',root),[
+    {q:'A recording plays the prayer again and again.',o:SS,fixed:1,a:'Standard'},
+    {q:'The worker says the prayer for each animal.',o:SS,fixed:1,a:'Strict halal'},
+    {q:'Rotating blades cut hundreds of birds a minute.',o:SS,fixed:1,a:'Standard'},
+    {q:'A person makes one cut forward and back.',o:SS,fixed:1,a:'Strict halal'},
+    {q:'The worker says “Bismillah” once for the whole conveyor belt.',o:SS,fixed:1,a:'Standard'}
+  ],function(){f.sd=1;check()});
+  makeQuiz($('#md',root),[
+    {q:'In the strictest rules, the worker ___ say the prayer for every animal.',o:MD,a:'must'},
+    {q:'A machine ___ do the cut in strict halal slaughter.',o:MD,a:'can’t'},
+    {q:'The slaughterer ___ be mentally sane.',o:MD,a:'must'},
+    {q:'A Muslim ___ eat pork.',o:MD,a:'mustn’t'}
+  ],function(){f.md=1;check()});
+  var order=shuffle([0,1,2,3]),picked=[];
+  function draw(){
+    $('#yours').innerHTML=picked.length?'<ol class="steps">'+picked.map(function(n){return '<li>'+STEPS[n]+'</li>'}).join('')+'</ol>':'<p class="note" style="margin:0">Tap step 1 first.</p>';
+    $('#ord').innerHTML=order.filter(function(n){return picked.indexOf(n)<0}).map(function(n){return '<button class="opt" data-s="'+n+'">'+STEPS[n]+'</button>'}).join('');
+  }
+  $('#ord').onclick=function(e){
+    var b=e.target.closest('.opt');if(!b)return;
+    var n=+b.dataset.s,fb=$('#ofb');
+    if(n===picked.length){
+      picked.push(n);reward(5);fb.textContent='';draw();
+      if(picked.length===4){fb.textContent='Perfect order!';fb.className='fb good';f.ord=1;check()}
+    }else{
+      fb.textContent='Not yet. Which step comes '+(picked.length===0?'first':'next')+'?';fb.className='fb bad';
+      b.classList.add('no');setTimeout(function(){b.classList.remove('no')},400);
+    }
+  };
+  $('#wdone').onclick=function(){
+    var words=$('#wr').value.trim().split(/\s+/).filter(Boolean).length,ticks=$$('.ck',root).filter(function(c){return c.checked}).length,fb=$('#wfb');
+    if(words<25||ticks<3){fb.textContent='Write at least 25 words and tick at least 3 boxes ('+words+' words, '+ticks+' ticked).';fb.className='fb bad';return}
+    fb.textContent=bonus?'Well done again!':'Great writing! Read it aloud to a friend.';fb.className='fb good';
+    if(!bonus){bonus=true;reward(15)}
+  };
+  draw();
+}
+
+/* ---------- mission 7: final (short open questions) ---------- */
+var FQ=[
+  {q:"Potatoes are vegetables, aren't they? Explain why the Eatwell Guide puts them in a different group.",
+   k:[{t:"potatoes are starchy / carbohydrates",re:/starch|carbohydrate/},{t:"they go with bread, rice and pasta",re:/bread|rice|pasta|cereal/}],min:2,
+   v:["potatoes","starchy","carbohydrates","bread|rice|pasta"],g:{re:/\bbecause\b/,t:'Use "because" to give a reason.'},
+   m:"No, they aren't. Potatoes are starchy foods, so they are in the same group as bread, rice and pasta, not in the fruit and vegetables group."},
+  {q:"How many portions of fruit and vegetables should you eat every day, and why are they good for you?",
+   k:[{t:"at least 5 portions",re:/\b(5|five)\b/},{t:"vitamins / minerals / they fight disease",re:/vitamin|mineral|disease|health|ill/}],min:2,
+   v:["portions","vitamins","minerals","disease"],g:{re:/at least|\bshould\b/,t:'Use "should" or "at least": You should eat at least...'},
+   m:"You should eat at least five portions every day. They have vitamins and minerals, and they help your body fight disease."},
+  {q:"What kind of bread, rice and pasta should you choose? Why?",
+   k:[{t:"wholegrain",re:/whole\s?-?grain|wholemeal|brown/},{t:"a reason: fibre, carbohydrates, vitamins or healthier",re:/fibre|fiber|carbohydrate|vitamin|health/}],min:2,
+   v:["wholegrain","fibre|fiber","carbohydrates","starchy"],g:{re:/because/,t:'Use "because" to give a reason.'},
+   m:"You should choose wholegrain bread, rice and pasta because they have more fibre."},
+  {q:"What does the Eatwell Guide say about fish?",
+   k:[{t:"2 portions",re:/\b(2|two|twice)\b/},{t:"a week",re:/week/},{t:"one portion is oily fish (salmon, trout...)",re:/oily|salmon|trout|mackerel|sardine/}],min:2,
+   v:["portions","oily fish","salmon"],g:{re:/\b(a|each|every|per) week\b/,t:'Say how often: "a week" or "every week".'},
+   m:"We should eat two portions of fish a week. One of them should be oily fish, like salmon."},
+  {q:"Which diet-related health problems can a healthy diet help to reduce? Name two, and say one thing we should eat less of.",
+   k:[{t:"two problems (diabetes, heart disease, obesity, tooth decay)",re:/diabet|heart|cardio|obes|tooth|teeth|cancer/g,n:2},{t:"one thing to eat less of (fat, sugar, salt, sweets...)",re:/fat|sugar|salt|sweet|crisps|chocolate|biscuit|processed/}],min:2,
+   v:["diabetes","obesity","cardiovascular|heart","tooth decay"],g:{re:/\bless\b|cut down|reduce/,t:'Use "eat less" or "cut down on".'},
+   m:"A healthy diet can reduce diabetes and tooth decay. We should eat less sugar and saturated fat."},
+  {q:"Why is olive oil better for you than butter?",
+   k:[{t:"it is unsaturated",re:/unsaturat|healthy fat|good fat/},{t:"it helps reduce cholesterol (or is good for the heart)",re:/cholesterol|heart|blood/},{t:"use only a little",re:/little|small|less|not too much/}],min:2,
+   v:["unsaturated","cholesterol","butter"],g:{re:/\bthan\b/,t:'Use a comparative: "better than" or "healthier than".'},
+   m:"Olive oil is better than butter because it is unsaturated and helps reduce cholesterol. We should use it in small amounts."},
+  {q:"What are foods high in fat, salt and sugar? Give two examples and say how often we should eat them.",
+   k:[{t:"two examples (sweets, biscuits, chocolate, crisps, cake, sugary drinks...)",re:/sweets?|biscuits?|chocolate|crisps|cakes?|sugary drinks?|fizzy|soda|chips|ice cream|pastr(?:y|ies)/g,n:2},{t:"less often / in small amounts",re:/less|small|rarely|sometimes|occasionally|not often|few|little|not essential/}],min:2,
+   v:["calories","essential","nutritional"],g:{re:/\bshould\b/,t:'Use "should" + verb: We should eat them...'},
+   m:"Sweets and biscuits are high in fat, salt and sugar. We should eat them less often and in small amounts."},
+  {q:"Explain the difference between a vegetarian, a vegan and a flexitarian.",
+   k:[{t:"vegetarian: no meat and no fish",re:/vegetarian[^.]*?(no|not|never|n't|without)[^.]*?(meat|fish)/},{t:"vegan: no animal products (milk, eggs, cheese...)",re:/vegan[^.]*?(animal|dairy|egg|milk|cheese|honey)/},{t:"flexitarian: mostly plants, sometimes meat",re:/flexitarian[^.]*?(mostly|mainly|usually|sometimes|occasionally|plant|veg)/}],min:2,
+   v:["vegetarian","vegan","flexitarian","animal products"],g:{re:/(doesn't|does not|never|only|mostly|sometimes)\s+\w+/,t:'Use the present simple: "doesn\'t eat", "never eats", "mostly eats".'},
+   m:"A vegetarian eats no meat and no fish. A vegan eats no animal products at all. A flexitarian eats mostly plants and sometimes meat."},
+  {q:"Choose one religion (Muslim, Jewish, Hindu or Buddhist). Explain one rule about food.",
+   k:[{t:"the religion",re:/muslim|islam|jewish|jew|judaism|hindu|buddhis/},{t:"a food rule (halal / haram, kosher, pork, milk and meat, cow, ahimsa...)",re:/halal|haram|pork|pig|alcohol|kosher|milk|cheese|meat|beef|cow|sacred|ahimsa|violence|vegetarian|vegan|blood|shellfish/}],min:2,
+   v:["halal|haram","kosher","sacred","non-violence|ahimsa"],g:{re:/\b(don't|do not|doesn't|does not|never|can't|cannot|mustn't|must not|must|can)\b/,t:'Use "don\'t eat", "can\'t eat", "must" or "mustn\'t" for rules.'},
+   m:"Muslims don't eat pork because it is haram. They eat only halal food."},
+  {q:"Under the strictest halal rules, what must happen when an animal is slaughtered? Name two rules.",
+   k:[{t:"the prayer is said for every animal",re:/prayer|bismillah|tasmiyah|say|said/},{t:"the cut is made by hand, not by a machine",re:/hand|human|person|machine|blade/},{t:"the slaughterer is a practising Muslim, an adult and sane",re:/muslim|adult|sane/}],min:2,
+   v:["halal","slaughter","haram"],g:{re:/\b(must|mustn't|can't|cannot|can)\b/,t:'Use "must" and "can\'t" for strict rules.'},
+   m:"The worker must say the prayer for every animal. The cut must be made by hand, and a machine can't do it."}
+];
+function escH(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function normT(s){return s.toLowerCase().replace(/[\u2018\u2019]/g,"'").replace(/\s+/g,' ').trim()}
+function kHit(t,k){
+  if(k.n){var m=t.match(k.re)||[],o={};m.forEach(function(x){o[x.replace(/s$/,'')]=1});return Object.keys(o).length>=k.n}
+  return k.re.test(t);
+}
+function vUsed(t,v){
+  return v.map(function(w){
+    var alts=w.split('|');
+    return [alts[0],alts.some(function(a){var s=a.toLowerCase();return t.indexOf(s.slice(0,Math.max(4,s.length-2)))>-1})];
+  });
+}
+function gramCheck(raw){
+  var t=raw.trim(),l=normT(raw),m=[];
+  if(/^[a-z]/.test(t))m.push('Start the sentence with a capital letter.');
+  if(!/[.!?]["')]*$/.test(t))m.push('End your answer with a full stop.');
+  if(/\b(?:doesn't|does not|didn't|did not|don't|do not|can't|cannot|can|could|should|shouldn't|must|mustn't|will|won't)\s+(?!always\b|sometimes\b|less\b|unless\b|perhaps\b|usually\b|this\b|its\b|plus\b|thus\b)(?!\w*ss\b)\w{3,}s\b/.test(l))m.push('After do / does / can / should / must use the base verb: "doesn\'t eat", not "doesn\'t eats".');
+  if(/\b(?:can|could|should|shouldn't|must|mustn't|can't|cannot|may|will|won't)\s+to\b/.test(l))m.push('No "to" after can / should / must: "should eat", not "should to eat".');
+  if(/\b(?:dont|doesnt|cant|isnt|mustnt|shouldnt|arent)\b/.test(l))m.push("Check the apostrophe: don't, doesn't, can't.");
+  if(/\ba\s+(?!one\b)[aeio]\w*/.test(l)||/\ban\s+[bcdfgjklmnpqrstvwxyz]\w*/.test(l))m.push('Check a / an: "an" before a vowel sound (an egg), "a" before a consonant sound (a fish).');
+  if(/\b(?:vegans|vegetarians|flexitarians|muslims|jews|hindus|buddhists|people|adults|we|they|you)\s+(?:eats|drinks|has|does|is)\b/.test(l))m.push('Plural subjects (people, vegans, they) need eat / have / are, not eats / has / is.');
+  if(/\b(?:he|she|it|a vegan|a vegetarian|a flexitarian|a muslim)\s+(?:eat|drink|have|are)\b/.test(l)||/\b(?:he|she|it)\s+(?:don't|do not)\b/.test(l))m.push('He / she / it / a vegan + verb with -s: eats, has, is, doesn\'t.');
+  return m;
+}
+function initFinal(root){
+  var n=0,tries=0,okCount=0,ans=[],okArr=[];
+  function render(){
+    if(n>=FQ.length){
+      var pass=okCount>=7,t=okCount>=9?['🏆','Eatwell Champion']:(pass?['🥇','Plate Pro']:['🌱','Good start']);
+      root.innerHTML='<div class="card"><div class="result"><div class="big" aria-hidden="true">'+t[0]+'</div><h3>'+t[1]+'</h3><p>'+okCount+' of '+FQ.length+' answers had the key content.'+(pass?'':' You need 7 to finish the mission.')+'</p><div class="row"><button class="btn" data-again>Play again</button><button class="btn ghost" data-go="home">All missions</button></div></div></div>'+
+        '<div class="card"><h3>Your answers</h3>'+FQ.map(function(q,i){return '<div class="rev"><p class="note" style="margin:0"><b>'+(i+1)+'. '+q.q+'</b></p><p style="margin:6px 0 0"><span class="'+(okArr[i]?'ok-t':'no-t')+'">'+(okArr[i]?'Key content found':'Key content missing')+'</span><br>Your answer: '+(ans[i]?escH(ans[i]):'<i>(skipped)</i>')+'<br>Model answer: '+escH(q.m)+'</p></div>'}).join('')+'</div>';
+      if(pass)complete('final');return;
+    }
+    var q=FQ[n];
+    root.innerHTML='<div class="card fq"><div class="fqh"><span>Question '+(n+1)+' of '+FQ.length+'</span><span>Good answers '+okCount+'</span></div><div class="meter"><i style="width:'+(n/FQ.length*100)+'%"></i></div>'+
+      '<h3>'+q.q+'</h3><p class="note" style="margin:0 0 10px">Write 1 or 2 full sentences.</p>'+
+      '<textarea id="oa" rows="4" aria-label="Your answer" style="width:100%;font:inherit;padding:10px;border:2px solid var(--line);border-radius:12px;background:var(--bg);color:var(--ink)"></textarea>'+
+      '<div class="row" style="margin-top:12px"><button class="btn" data-check>Check my answer</button></div><div class="fbk" id="ofb" aria-live="polite"></div><div class="nxt"></div></div>';
+    tries=0;
+  }
+  function nextBtn(){return '<button class="btn" data-next>'+(n===FQ.length-1?'See my result':'Next question')+'</button>'}
+  root.onclick=function(e){
+    if(e.target.closest('[data-again]')){n=0;okCount=0;ans=[];okArr=[];render();return}
+    if(e.target.closest('[data-next]')){n++;render();return}
+    var q=FQ[n];
+    if(e.target.closest('[data-model]')){
+      ans[n]=ans[n]||'';okArr[n]=!!okArr[n];
+      $('#ofb',root).insertAdjacentHTML('beforeend','<div><b>Model answer</b>'+escH(q.m)+'</div>');
+      $('.nxt',root).innerHTML=nextBtn();
+      e.target.closest('[data-model]').remove();return;
+    }
+    if(e.target.closest('[data-retry]')){var ta=$('#oa',root);ta.focus();return}
+    if(!e.target.closest('[data-check]'))return;
+    var raw=$('#oa',root).value,fb=$('#ofb',root);
+    if(raw.trim().split(/\s+/).filter(Boolean).length<4){fb.innerHTML='<div><span class="no-t">Write a full sentence (at least 4 words).</span></div>';return}
+    tries++;ans[n]=raw.trim();
+    var t=normT(raw),hits=q.k.map(function(k){return kHit(t,k)}),nh=hits.filter(Boolean).length,ok=nh>=q.min,voc=vUsed(t,q.v),gm=gramCheck(raw),gUsed=q.g.re.test(t);
+    var h='<div><b>Content ('+nh+' of '+q.k.length+' points)</b>'+q.k.map(function(k,i){return '<span class="'+(hits[i]?'ok-t':'no-t')+'">'+(hits[i]?'✔ ':'✘ ')+escH(k.t)+'</span>'}).join('<br>')+'</div>';
+    h+='<div><b>Vocabulary</b>'+voc.map(function(x){return '<span class="'+(x[1]?'ok-t':'')+'">'+(x[1]?'✔ ':'○ ')+escH(x[0])+'</span>'}).join(' &nbsp; ')+'<br><span class="note" style="margin:0">Topic words used: '+voc.filter(function(x){return x[1]}).length+' of '+voc.length+'.</span></div>';
+    h+='<div><b>Grammar</b>'+(gm.length?gm.map(function(x){return '<span class="no-t">✘ '+escH(x)+'</span>'}).join('<br>'):'<span class="ok-t">✔ No common mistakes found.</span>')+'<br><span class="'+(gUsed?'ok-t':'no-t')+'">'+(gUsed?'✔ ':'✘ ')+'Focus: '+escH(q.g.t)+'</span><br><span class="note" style="margin:0">This is a quick check, not a full grammar check. Read your answer again.</span></div>';
+    if(ok){
+      if(!okArr[n]){okArr[n]=true;okCount++;reward(tries===1?10:3)}
+      h+='<div><b>Model answer</b>'+escH(q.m)+'</div>';
+      fb.innerHTML=h;$('.nxt',root).innerHTML=nextBtn();
+    }else{
+      fb.innerHTML=h+'<div><span class="no-t">Some key content is missing. Read the points above and try again.</span><div class="row" style="margin-top:8px"><button class="btn ghost" data-retry>Try again</button><button class="btn ghost" data-model>Show model answer</button></div></div>';
+      $('.nxt',root).innerHTML='';
+    }
+  };
+  render();
+}
+
+/* ---------- home, views, navigation ---------- */
+var INIT={plate:initPlate,tips:initTips,words:initWords,diets:initDiets,faith:initFaith,halal:initHalal,final:initFinal};
+var inited={};
+var app=$('#app');
+MISSIONS.forEach(function(m){
+  var s=document.createElement('section');
+  s.className='view';s.id='v-'+m.id;s.hidden=true;
+  s.innerHTML='<div class="vhead"><button class="back" data-go="home">← All missions</button><h2>'+m.title+'</h2><p class="lead">'+m.lead+'</p></div><div class="body"></div>'+(m.id==='tips'||m.id==='diets'||m.id==='faith'||m.id==='halal'?'':'<div class="fin"></div>');
+  app.appendChild(s);
+});
+$('#missionList').innerHTML=MISSIONS.map(function(m,i){
+  return '<button class="mcard" data-go="'+m.id+'" data-g="'+m.g+'"><span class="pics" aria-hidden="true">'+m.pics+'</span><span class="mtxt"><span class="mnum">Mission '+(i+1)+'</span><strong>'+m.title+'</strong><span>'+m.sub+'</span></span><span class="st">Start</span></button>';
+}).join('');
+$('#hplate').innerHTML='<circle cx="150" cy="150" r="144" fill="var(--surface)" stroke="var(--accent)" stroke-width="6"/>'+plateMarkup(false);
+function refreshHome(){
+  var n=MISSIONS.filter(function(m){return state.done[m.id]}).length;
+  $('#hprog').style.width=(n/MISSIONS.length*100)+'%';
+  $('#hcount').textContent=n+' of '+MISSIONS.length+' done';
+  $$('.mcard').forEach(function(b){
+    var d=!!state.done[b.dataset.go];b.classList.toggle('done',d);$('.st',b).textContent=d?'Done ✓':'Start';
+  });
+}
+var IDS=['home'].concat(MISSIONS.map(function(m){return m.id}));
+function show(id){
+  if(IDS.indexOf(id)<0)id='home';
+  $$('.view').forEach(function(v){v.hidden=v.id!=='v-'+id});
+  if(id!=='home'&&!inited[id]){inited[id]=1;INIT[id]($('#v-'+id+' .body'))}
+  window.scrollTo(0,0);
+  try{var want=id==='home'?'':id;if(location.hash.slice(1)!==want)location.hash=want}catch(e){}
+}
+document.addEventListener('click',function(e){
+  var g=e.target.closest('[data-go]');
+  if(g)show(g.dataset.go);
+});
+window.addEventListener('hashchange',function(){show(location.hash.slice(1))});
+var resetArmed=false;
+$('#reset').onclick=function(){
+  var b=$('#reset');
+  if(!resetArmed){resetArmed=true;b.textContent='Tap again to erase your XP and progress';setTimeout(function(){resetArmed=false;b.textContent='Reset my progress'},3500);return}
+  resetArmed=false;state={xp:0,done:{}};save();
+  $('#xpn').textContent='0';$$('.fin').forEach(function(f){f.innerHTML=''});
+  refreshHome();b.textContent='Progress reset';
+};
+$('#xpn').textContent=state.xp;
+refreshHome();
+show(location.hash.slice(1));
+})();
+</script>
+
+</body></html>
