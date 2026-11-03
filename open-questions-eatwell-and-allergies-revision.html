@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Safe Plates – Open Questions</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600;800&family=Public+Sans:wght@400;600&display=swap">
+<style>
+:root{--bg:#f6f4ee;--surface:#ffffff;--ink:#1c2b24;--muted:#5b6b63;--line:#d9ddd3;--accent:#1f6b4a;--accent-ink:#ffffff;--warn:#c8431f;--chip:#e6efe6;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){color-scheme:dark;--bg:#12201a;--surface:#1a2c24;--ink:#eaf1ec;--muted:#a3b5aa;--line:#2f4439;--accent:#5fc596;--accent-ink:#0e1d16;--warn:#ff8a65;--chip:#24392f}}
+:root[data-theme="dark"]{color-scheme:dark;--bg:#12201a;--surface:#1a2c24;--ink:#eaf1ec;--muted:#a3b5aa;--line:#2f4439;--accent:#5fc596;--accent-ink:#0e1d16;--warn:#ff8a65;--chip:#24392f}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.55 "Public Sans",system-ui,sans-serif}
+main{max-width:720px;margin:0 auto;padding:28px 18px 60px}
+h1{font:800 clamp(30px,6vw,44px)/1.1 Fraunces,Georgia,serif;margin:0 0 10px}
+h2{font:600 22px/1.2 Fraunces,Georgia,serif;margin:0 0 6px}
+.lead{color:var(--muted);margin:0 0 22px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px;margin:0 0 16px}
+label{font-weight:600;display:block;margin-bottom:6px}
+input[type=text],input[type=password],textarea{width:100%;font:inherit;color:var(--ink);background:var(--bg);border:1.5px solid var(--line);border-radius:8px;padding:10px 12px}
+textarea{min-height:150px;resize:vertical;line-height:1.5}
+input:focus-visible,textarea:focus-visible,button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.qn{font:800 15px Fraunces,Georgia,serif;color:var(--accent);margin:0 0 4px}
+.q{font-weight:600;margin:0 0 8px}
+.hint{font-size:14.5px;color:var(--muted);margin:0 0 10px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 10px}
+.chips span{background:var(--chip);border-radius:999px;padding:2px 10px;font-size:14px}
+.count{font-size:13.5px;color:var(--muted);text-align:right;margin-top:4px}
+button{font:600 17px "Public Sans",system-ui,sans-serif;background:var(--accent);color:var(--accent-ink);border:0;border-radius:10px;padding:13px 26px;cursor:pointer}
+button.ghost{background:transparent;color:var(--accent);border:1.5px solid var(--accent);padding:9px 18px;font-size:15px}
+button:disabled{opacity:.55;cursor:default}
+.msg{margin-top:14px;padding:12px 14px;border-radius:8px;background:var(--chip)}
+.msg.err{border:1.5px solid var(--warn)}
+.teacher{margin-top:44px;border-top:1px solid var(--line);padding-top:18px}
+.teacher summary{cursor:pointer;color:var(--muted);font-size:15px}
+.row{display:flex;gap:8px;margin-top:12px}
+.row input{flex:1}
+.sub{border-left:4px solid var(--accent);padding:4px 0 4px 14px;margin:20px 0}
+.sub h3{margin:0;font-size:18px}
+.sub small{color:var(--muted)}
+.ans{white-space:pre-wrap;margin:8px 0 0;padding:8px 10px;background:var(--bg);border-radius:6px}
+.ans b{display:block;font-size:14px;color:var(--muted);margin-bottom:2px}
+.empty{color:var(--muted);font-style:italic}
+</style>
+</head>
+<body>
+<main>
+<h1>Safe Plates</h1>
+<p class="lead">Ten questions on food allergies, safe dining, the Eatwell Guide and special diets. They start easy and get harder, so begin from Question 1 and go as far as you can. Write 3 to 8 lines in English for each answer. Use the green words to help you. You can send your work even if you haven’t answered every question.</p>
+
+<div class="card">
+  <label for="name">Your name</label>
+  <input type="text" id="name" autocomplete="name" placeholder="Name and surname">
+</div>
+
+<div id="qs"></div>
+
+<button id="send" type="button">Send my answers</button>
+<div id="status" role="status"></div>
+
+<section class="teacher">
+  <details id="tdet">
+    <summary>Teacher area</summary>
+    <div class="row">
+      <input type="password" id="pw" placeholder="Password" aria-label="Teacher password">
+      <button class="ghost" id="unlock" type="button">Open</button>
+    </div>
+    <div id="tmsg"></div>
+    <div id="tlist"></div>
+  </details>
+</section>
+</main>
+
+<script>
+const QUESTIONS = [
+ {q:"Name three foods that can cause an allergy. What can happen to a person after they eat one of these foods?", w:["milk","eggs","peanuts","fish","skin rash","difficult to breathe"]},
+ {q:"What did you eat yesterday for lunch? Write what was on your plate. Was it healthy? Say why or why not.", w:["I ate…","vegetables","fruit","bread / pasta / rice","meat / fish","healthy","too much sugar"]},
+ {q:"Think about a vegetarian, a vegan and a person who follows a kosher or halal diet. What can’t each person eat? Suggest one dish for one of them.", w:["meat","fish","eggs","milk","can’t eat","I suggest…"]},
+ {q:"What is the difference between a food allergy and a food intolerance? Think about symptoms and danger.", w:["immune system","symptoms","fast / slow","dangerous","digest"]},
+ {q:"What is coeliac disease? Say where gluten is found and what these people can eat instead.", w:["gluten","wheat","bread, pasta, beer","gluten-free","cornmeal"]},
+ {q:"Why can eating out be stressful or risky for people with food allergies? Give two reasons and explain how a restaurant can help.", w:["rising number","reaction","anaphylaxis","reassuring","ingredients"]},
+ {q:"Choose the two most important points from “Six points for safe dining”. Explain why you chose them and what can happen if a restaurant ignores them.", w:["transparent","allergens on the menu","train staff","in my opinion","because","if…, then…"]},
+ {q:"What is cross-contact in a kitchen? Give two causes and explain how cooks can avoid it. Why is a clean kitchen not enough?", w:["shared fryer","utensils","wash hands","separate area","trace","even if"]},
+ {q:"Describe what happens to an “allergy order” from the guest to the table. What could go wrong if one step is missing, and who is responsible?", w:["menu","waiter","POS","chef","marked dish","responsible for"]},
+ {q:"A guest says “I’m lactose intolerant” and another says “I have a dairy allergy”. A new colleague says: “It’s only a little parmesan, it’s fine.” What do you answer to your colleague? Use what you know about allergies, intolerances and staff training.", w:["trace","life-threatening","depends on","staff training","I would explain that…","not the same"]}
+];
+const $ = id => document.getElementById(id);
+const wrap = $("qs");
+QUESTIONS.forEach((o,i)=>{
+  const c = document.createElement("div"); c.className="card";
+  const n = document.createElement("p"); n.className="qn"; n.textContent="Question "+(i+1);
+  const q = document.createElement("p"); q.className="q"; q.textContent=o.q;
+  const h = document.createElement("div"); h.className="chips";
+  o.w.forEach(w=>{const s=document.createElement("span"); s.textContent=w; h.appendChild(s);});
+  const t = document.createElement("textarea"); t.id="a"+i; t.setAttribute("aria-label","Answer to question "+(i+1)); t.placeholder="Write 3–8 lines here…";
+  const k = document.createElement("div"); k.className="count"; k.id="c"+i; k.textContent="0 words";
+  t.addEventListener("input",()=>{k.textContent=wc(t.value)+" words"; saveDraft();});
+  c.append(n,q,h,t,k); wrap.appendChild(c);
+});
+function wc(s){const m=s.trim().match(/\S+/g);return m?m.length:0}
+
+function saveDraft(){
+  try{sessionStorage.setItem("sp_draft",JSON.stringify({n:$("name").value,a:QUESTIONS.map((_,i)=>$("a"+i).value)}))}catch(e){}
+}
+try{
+  const d=JSON.parse(sessionStorage.getItem("sp_draft")||"null");
+  if(d){$("name").value=d.n||"";d.a.forEach((v,i)=>{$("a"+i).value=v;$("c"+i).textContent=wc(v)+" words"})}
+}catch(e){}
+$("name").addEventListener("input",saveDraft);
+
+let db=null,uid=null;
+claude.use("db").then(x=>{db=x}).catch(()=>{});
+claude.use("user").then(async u=>{if(u)uid=await u.id()}).catch(()=>{});
+
+function showStatus(html,err,extra){
+  const s=$("status"); s.textContent="";
+  const d=document.createElement("div"); d.className="msg"+(err?" err":""); d.textContent=html; s.appendChild(d);
+  if(extra) s.appendChild(extra);
+}
+function compose(name){
+  return "Name: "+name+"\n\n"+QUESTIONS.map((o,i)=>"Q"+(i+1)+". "+o.q+"\n"+($("a"+i).value.trim()||"(no answer)")).join("\n\n");
+}
+$("send").addEventListener("click",async()=>{
+  const name=$("name").value.trim();
+  if(!name){showStatus("Please write your name first.",true);$("name").focus();return}
+  const answers=QUESTIONS.map((_,i)=>$("a"+i).value.trim());
+  const btn=$("send"); btn.disabled=true;
+  try{
+    if(!db||!uid) throw new Error("no db");
+    await db.collection("submissions").doc(uid).set({name,answers,at:Date.now()});
+    showStatus("Thank you, "+name+"! Your answers have been sent."+(answers.some(a=>!a)?" (Some questions are empty, but that’s OK.)":""));
+    try{sessionStorage.removeItem("sp_draft")}catch(e){}
+  }catch(e){
+    const ta=document.createElement("textarea"); ta.readOnly=true; ta.value=compose(name); ta.style.marginTop="10px";
+    const cp=document.createElement("button"); cp.className="ghost"; cp.type="button"; cp.style.marginTop="10px"; cp.textContent="Copy my answers";
+    cp.onclick=()=>{ta.select();try{navigator.clipboard.writeText(ta.value)}catch(_){document.execCommand("copy")}cp.textContent="Copied!"};
+    const box=document.createElement("div"); box.append(ta,cp);
+    showStatus("Your answers could not be sent from this page. Please copy them below and send them to your teacher.",true,box);
+  }finally{btn.disabled=false}
+});
+
+let unsub=null;
+$("unlock").addEventListener("click",()=>{
+  const m=$("tmsg"), list=$("tlist");
+  if($("pw").value!=="reveal"){m.innerHTML="";const p=document.createElement("p");p.className="empty";p.textContent="Wrong password.";m.appendChild(p);return}
+  m.textContent=""; list.textContent="";
+  if(!db){const p=document.createElement("p");p.className="empty";p.textContent="Database not available in this view.";m.appendChild(p);return}
+  if(unsub) unsub();
+  unsub=db.collection("submissions").orderBy("at","desc").onSnapshot(snap=>{
+    list.textContent="";
+    if(snap.empty){const p=document.createElement("p");p.className="empty";p.textContent="No answers sent yet.";list.appendChild(p);return}
+    const tot=document.createElement("p");tot.textContent=snap.size+" submission"+(snap.size>1?"s":"");list.appendChild(tot);
+    snap.docs.forEach(d=>{
+      const v=d.data(), s=document.createElement("div"); s.className="sub";
+      const done=(v.answers||[]).filter(a=>a).length;
+      const h=document.createElement("h3"); h.textContent=v.name;
+      const sm=document.createElement("small"); sm.textContent=new Date(v.at).toLocaleString()+" – "+done+"/10 answered";
+      s.append(h,sm);
+      (v.answers||[]).forEach((a,i)=>{
+        const p=document.createElement("div"); p.className="ans";
+        const b=document.createElement("b"); b.textContent="Q"+(i+1)+". "+QUESTIONS[i].q;
+        const t=document.createElement("span"); t.textContent=a||"—";
+        if(!a) t.className="empty";
+        p.append(b,t); s.appendChild(p);
+      });
+      list.appendChild(s);
+    });
+  },()=>{const p=document.createElement("p");p.className="empty";p.textContent="You don’t have permission to read the answers: open this page from your own claude.ai account.";m.appendChild(p)});
+});
+$("pw").addEventListener("keydown",e=>{if(e.key==="Enter")$("unlock").click()});
+</script>
+</body>
+</html>
